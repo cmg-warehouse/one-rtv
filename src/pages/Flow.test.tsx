@@ -42,3 +42,9 @@ test('the two pages link to each other keeping the scenario', async () => {
   expect(screen.getByRole('link', { name: /flow ละเอียด/i })).toHaveAttribute('href', '/flow/detail?s=SHOP%3APLAZA_4W');
   expect(screen.getByRole('link', { name: 'ดู Demo นำชม' })).toHaveAttribute('href', '/tour');
 });
+test('each role lane row carries its lane class', () => {
+  const { container } = renderAt('/flow');
+  for (const r of ['BRAND', 'CS', 'CARRIER', 'SCDC', 'WH', 'ADMIN_CN', 'VIEWER']) {
+    expect(container.querySelector(`.flow-row.lane-${r}`)).not.toBeNull();
+  }
+});

@@ -121,3 +121,19 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
 .intro-card { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .intro-card p { margin: 0; }
 .intro-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Flow lane colouring */
+.lane-BRAND { background: color-mix(in srgb, var(--color-brand) 6%, var(--color-bg)); }
+.lane-BRAND > .flow-rowhead { background: color-mix(in srgb, var(--color-brand) 12%, var(--color-bg)); }
+.lane-CS { background: color-mix(in srgb, var(--status-assigned) 6%, var(--color-bg)); }
+.lane-CS > .flow-rowhead { background: color-mix(in srgb, var(--status-assigned) 12%, var(--color-bg)); }
+.lane-CARRIER { background: color-mix(in srgb, var(--status-transit) 6%, var(--color-bg)); }
+.lane-CARRIER > .flow-rowhead { background: color-mix(in srgb, var(--status-transit) 12%, var(--color-bg)); }
+.lane-SCDC { background: color-mix(in srgb, var(--status-failed) 6%, var(--color-bg)); }
+.lane-SCDC > .flow-rowhead { background: color-mix(in srgb, var(--status-failed) 12%, var(--color-bg)); }
+.lane-WH { background: color-mix(in srgb, var(--status-done) 6%, var(--color-bg)); }
+.lane-WH > .flow-rowhead { background: color-mix(in srgb, var(--status-done) 12%, var(--color-bg)); }
+.lane-ADMIN_CN { background: color-mix(in srgb, var(--status-alert) 6%, var(--color-bg)); }
+.lane-ADMIN_CN > .flow-rowhead { background: color-mix(in srgb, var(--status-alert) 12%, var(--color-bg)); }
+.lane-VIEWER { background: color-mix(in srgb, var(--status-pending) 6%, var(--color-bg)); }
+.lane-VIEWER > .flow-rowhead { background: color-mix(in srgb, var(--status-pending) 12%, var(--color-bg)); }
