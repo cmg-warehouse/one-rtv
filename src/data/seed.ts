@@ -2,7 +2,7 @@ import {
   addDoc, advance, brandConfirmQty, brandRequestRecount, cancel, clearShortFlag, confirmPromo, createRtv, failPickup,
 } from '../domain/machine';
 import type { Ctx, StepPayload } from '../domain/machine';
-import { holds, nextStep, stepsFor } from '../domain/rules';
+import { holds, isMallGroup, nextStep, stepsFor } from '../domain/rules';
 import type { Carrier, Channel, DocRef, DocType, Role, Rtv, SaleType, Step } from '../domain/types';
 import { ACTORS, BRANDS, BRAND_ACTORS, STORES } from './masters';
 
@@ -149,7 +149,7 @@ function simulate(spec: Spec, index: number, origin: number, seq: number, scale:
   const channel = CHANNEL_OF.get(spec.store) as Channel;
   const carrier = spec.carrier ?? defaultCarrier(channel);
   const rtvNote = spec.rtvNote ?? 'late';
-  const mall = channel === 'CONSIGN' || channel === 'LOCAL_MALL';
+  const mall = isMallGroup(channel);
 
   let raw = origin;
   const lead = () => { raw += (0.5 + rng() ** 2 * 3.5) * DAY * scale; };

@@ -3,12 +3,10 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { searchByAnyNumber } from '../api';
 import { BRANDS, DEMO_BRAND_ID, STORES } from '../data/masters';
 import { daysBetween } from '../domain/format';
-import { CHANNEL_LABELS, CN_LABELS, STEP_LABELS, cnType, isClosed, owner } from '../domain/rules';
-import type { Channel, CnType, Role, Rtv, Step } from '../domain/types';
+import { CHANNEL_LABELS, CN_LABELS, STEP_LABELS, STEPS, cnType, isClosed, owner } from '../domain/rules';
+import type { Channel, CnType, Role, Rtv } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
 import { useRtvList } from '../state/useRtvs';
-
-const STEPS = Object.keys(STEP_LABELS).map(Number) as Step[];
 
 export default function RtvList() {
   const { rtvs } = useRtvList();

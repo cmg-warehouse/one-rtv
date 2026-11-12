@@ -1,5 +1,5 @@
 import { daysBetween } from './format';
-import { holds, isClosed, owner } from './rules';
+import { HOLDS, holds, isClosed, owner, STEPS } from './rules';
 import type { Hold, Role, Rtv, Step } from './types';
 
 export interface Metrics {
@@ -10,9 +10,6 @@ export interface Metrics {
   segments: { label: string; avgDays: number | null; n: number }[];
   shortBoxOpen: number;
 }
-
-const STEPS: Step[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const HOLDS: Hold[] = ['WAIT_BRAND_QTY', 'WAIT_RTV_NOTE', 'WAIT_PROMO'];
 
 /** Time of the latest STEP event for `step`, or null. */
 function stepAt(rtv: Rtv, step: Step): string | null {

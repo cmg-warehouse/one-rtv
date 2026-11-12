@@ -16,6 +16,17 @@ export const STEP_LABELS: Record<Step, string> = {
   10: 'ออก CN แล้ว (ปิดงาน)',
 };
 
+export const STEPS: Step[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+export const HOLDS: Hold[] = ['WAIT_BRAND_QTY', 'WAIT_RTV_NOTE', 'WAIT_PROMO'];
+
+/** Documents a Brand may add by hand. */
+export const BRAND_DOC_TYPES: DocType[] = ['MIM', 'SD10', 'RTV_NOTE'];
+
+/** Consign and Local mall orders go through the mall's own RTV Note (ห้าง). */
+export function isMallGroup(channel: Channel): boolean {
+  return channel === 'CONSIGN' || channel === 'LOCAL_MALL';
+}
+
 export const CHANNEL_LABELS: Record<Channel, string> = {
   CONSIGN: 'Consign',
   SHOP: 'Shop',
@@ -60,7 +71,7 @@ export const DOC_LABELS: Record<DocType, string> = {
 };
 
 export function cnType(channel: Channel, saleType: SaleType): CnType {
-  if (channel === 'CONSIGN' || channel === 'LOCAL_MALL') {
+  if (isMallGroup(channel)) {
     return saleType === 'PROMO' ? 'ETAX_CREDIT' : 'ETAX_CONSIGN';
   }
   return saleType === 'PROMO' ? 'TEMP_SHOP' : 'MIM_SHOP';
@@ -79,7 +90,6 @@ const BASE_ROLES: Record<Step, Role> = {
   6: 'SCDC', 7: 'SCDC', 8: 'WH', 9: 'WH', 10: 'ADMIN_CN',
 };
 
-const STEPS: Step[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 export function stepsFor(channel: Channel, carrier: Carrier | null): StepDef[] {
   return STEPS.map((step): StepDef => {
@@ -104,6 +114,11 @@ export function isClosed(rtv: Rtv): boolean {
   return rtv.step === 10 || !!rtv.cancelled;
 }
 
+/** An order can be cancelled until the carrier has collected the goods. */
+export function canCancel(rtv: Rtv): boolean {
+  return !isClosed(rtv) && rtv.step < 5;
+}
+
 export function nextStep(rtv: Rtv): StepDef | null {
   if (isClosed(rtv)) return null;
   return stepsFor(rtv.channel, rtv.carrier).find(s => s.step > rtv.step && s.mode !== 'SKIPPED') ?? null;
@@ -113,7 +128,7 @@ export function holds(rtv: Rtv): Hold[] {
   if (rtv.step !== 9) return [];
   const out: Hold[] = [];
   if (!rtv.qtyConfirmed && rtv.boxes.some(b => b.countedPcs !== b.expectedPcs)) out.push('WAIT_BRAND_QTY');
-  if ((rtv.channel === 'CONSIGN' || rtv.channel === 'LOCAL_MALL')
+  if (isMallGroup(rtv.channel)
     && !rtv.docs.some(d => d.type === 'RTV_NOTE')) out.push('WAIT_RTV_NOTE');
   if (rtv.saleType === 'PROMO' && !rtv.promoConfirmed) out.push('WAIT_PROMO');
   return out;

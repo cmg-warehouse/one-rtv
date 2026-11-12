@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
 import { computeMetrics } from '../domain/metrics';
-import { HOLD_LABELS, STEP_LABELS } from '../domain/rules';
-import type { Hold, Step } from '../domain/types';
+import { HOLD_LABELS, HOLDS, STEP_LABELS, STEPS } from '../domain/rules';
 import { ROLE_LABELS } from '../state/session';
 import { useRtvList } from '../state/useRtvs';
 
-const STEPS = Object.keys(STEP_LABELS).map(Number) as Step[];
-const HOLDS = Object.keys(HOLD_LABELS) as Hold[];
 const days = (n: number | null): string => (n === null ? '—' : `${n.toFixed(1)} วัน`);
 
 export default function Dashboard() {

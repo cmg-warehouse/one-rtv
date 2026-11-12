@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createRtv } from '../api';
 import { BRANDS, DEMO_BRAND_ID, STORES } from '../data/masters';
-import { CHANNEL_LABELS, DOC_LABELS } from '../domain/rules';
+import { BRAND_DOC_TYPES, CHANNEL_LABELS, DOC_LABELS, isMallGroup } from '../domain/rules';
 import type { DocRef, DocType, SaleType } from '../domain/types';
 import { useSession } from '../state/session';
 
@@ -22,8 +22,9 @@ export default function NewRtv() {
 
   const store = STORES.find(s => s.id === storeId);
   const brand = BRANDS.find(b => b.id === DEMO_BRAND_ID);
-  const showNote = store?.channel === 'CONSIGN' || store?.channel === 'LOCAL_MALL';
-  const docTypes: DocType[] = showNote ? ['MIM', 'SD10', 'RTV_NOTE'] : ['MIM', 'SD10'];
+  const docTypes: DocType[] = store && isMallGroup(store.channel)
+    ? BRAND_DOC_TYPES
+    : BRAND_DOC_TYPES.filter(t => t !== 'RTV_NOTE');
   const setDoc = (t: DocType, v: string) => setDocs(d => ({ ...d, [t]: v }));
 
   const submit = async () => {

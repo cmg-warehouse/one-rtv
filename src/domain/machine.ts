@@ -1,4 +1,6 @@
-import { allowedCarriers, cnType, holds, HOLD_LABELS, isClosed, nextStep, requiredDocs, stepsFor, DOC_LABELS } from './rules';
+import {
+  allowedCarriers, BRAND_DOC_TYPES, canCancel, cnType, DOC_LABELS, holds, HOLD_LABELS, isClosed, nextStep, requiredDocs, stepsFor,
+} from './rules';
 import type { Box, Carrier, Channel, DocRef, DocType, EventKind, Role, Rtv, RtvEvent, SaleType } from './types';
 
 export class FlowError extends Error {
@@ -21,7 +23,6 @@ export type StepPayload =
   | { step: 10; docs: Partial<Record<DocType, string>> };
 
 const WRONG_ROLE = 'ขั้นนี้ไม่ใช่หน้าที่ของบทบาทนี้';
-const BRAND_DOC_TYPES: DocType[] = ['MIM', 'RTV_NOTE', 'SD10'];
 
 export function rtvId(seq: number, now: string): string {
   const bkk = new Date(Date.parse(now) + 7 * 3600 * 1000);
@@ -221,7 +222,7 @@ export function addDoc(rtv: Rtv, doc: DocRef, ctx: Ctx): Rtv {
 export function cancel(rtv: Rtv, reason: string, ctx: Ctx): Rtv {
   requireOpen(rtv);
   requireRole(ctx, 'BRAND', 'CS');
-  if (rtv.step >= 5) throw new FlowError('ยกเลิกไม่ได้ เพราะขนส่งเก็บสินค้าแล้ว');
+  if (!canCancel(rtv)) throw new FlowError('ยกเลิกไม่ได้ เพราะขนส่งเก็บสินค้าแล้ว');
   const note = requireText(reason, 'กรุณาระบุเหตุผล');
   return next(rtv, { cancelled: { reason: note } }, [ev(ctx, 'CANCELLED', { note })]);
 }

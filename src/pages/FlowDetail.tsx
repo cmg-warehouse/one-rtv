@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { listRtvs } from '../api';
 import { DEMO_BRAND_ID } from '../data/masters';
 import { EXC_WAIT_PROMO, EXC_WAIT_RTV_NOTE, FLOW_COPY, FLOW_EXCEPTIONS } from '../data/flowCopy';
-import { STEP_LABELS, holds, nextStep } from '../domain/rules';
+import { STEP_LABELS, holds, isMallGroup, nextStep } from '../domain/rules';
 import type { Role, Rtv, Step } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
 import { stepDocs } from './FlowOverview';
@@ -14,7 +14,7 @@ export default function FlowDetail() {
   const { setRole, setCarrierActor } = useSession();
   const navigate = useNavigate();
   const [missing, setMissing] = useState<Step | null>(null);
-  const consignGroup = scenario.channel === 'CONSIGN' || scenario.channel === 'LOCAL_MALL';
+  const consignGroup = isMallGroup(scenario.channel);
 
   const open = async (n: Step, role: Role) => {
     if (n === 1) { setRole('BRAND'); navigate('/new'); return; }

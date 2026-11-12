@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { DOC_LABELS } from '../../domain/rules';
+import { BRAND_DOC_TYPES, canCancel as cancellable, DOC_LABELS } from '../../domain/rules';
 import type { DocType, Role, Rtv } from '../../domain/types';
 import { ErrorLine, useAct } from './useAct';
-
-const BRAND_DOCS: DocType[] = ['MIM', 'SD10', 'RTV_NOTE'];
 
 function CancelAction({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
   const [open, setOpen] = useState(false);
@@ -49,7 +47,7 @@ function AddDoc({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
     <div className="secondary-form">
       <label className="field">ประเภทเอกสาร
         <select value={type} onChange={e => setType(e.target.value as DocType)}>
-          {BRAND_DOCS.map(t => <option key={t} value={t}>{DOC_LABELS[t]}</option>)}
+          {BRAND_DOC_TYPES.map(t => <option key={t} value={t}>{DOC_LABELS[t]}</option>)}
         </select>
       </label>
       <label className="field">เลขเอกสาร
@@ -63,7 +61,7 @@ function AddDoc({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
 }
 
 export default function SecondaryActions({ rtv, role, onDone }: { rtv: Rtv; role: Role; onDone: () => void }) {
-  const canCancel = (role === 'BRAND' || role === 'CS') && rtv.step < 5;
+  const canCancel = (role === 'BRAND' || role === 'CS') && cancellable(rtv);
   const canClear = role === 'CS' && rtv.shortBoxes > 0;
   const canAddDoc = role === 'BRAND';
   if (!canCancel && !canClear && !canAddDoc) return null;
