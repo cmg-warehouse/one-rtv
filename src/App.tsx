@@ -7,12 +7,12 @@ import PickupSlip from './pages/PickupSlip';
 import RtvList from './pages/RtvList';
 import CarrierJobs from './pages/CarrierJobs';
 import Tour from './pages/Tour';
+import FlowOverview from './pages/FlowOverview';
+import FlowDetail from './pages/FlowDetail';
 import TourOverlay from './components/TourOverlay';
 
 const PAGES: { path: string; title: string }[] = [
   { path: '/dashboard', title: 'Dashboard' },
-  { path: '/flow', title: 'Flow' },
-  { path: '/flow/detail', title: 'Flow รายละเอียด' },
 ];
 
 export function AppShell() {
@@ -27,6 +27,8 @@ export function AppShell() {
           <Route path="/tour" element={<Tour />} />
           <Route path="/new" element={<NewRtv />} />
           <Route path="/slip/:id" element={<PickupSlip />} />
+          <Route path="/flow" element={<FlowOverview />} />
+          <Route path="/flow/detail" element={<FlowDetail />} />
           {PAGES.map((p) => (
             <Route key={p.path} path={p.path} element={<h1>{p.title}</h1>} />
           ))}
