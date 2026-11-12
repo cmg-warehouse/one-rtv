@@ -9,11 +9,9 @@ import CarrierJobs from './pages/CarrierJobs';
 import Tour from './pages/Tour';
 import FlowOverview from './pages/FlowOverview';
 import FlowDetail from './pages/FlowDetail';
+import Dashboard from './pages/Dashboard';
 import TourOverlay from './components/TourOverlay';
 
-const PAGES: { path: string; title: string }[] = [
-  { path: '/dashboard', title: 'Dashboard' },
-];
 
 export function AppShell() {
   return (
@@ -29,9 +27,7 @@ export function AppShell() {
           <Route path="/slip/:id" element={<PickupSlip />} />
           <Route path="/flow" element={<FlowOverview />} />
           <Route path="/flow/detail" element={<FlowDetail />} />
-          {PAGES.map((p) => (
-            <Route key={p.path} path={p.path} element={<h1>{p.title}</h1>} />
-          ))}
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
       <TourOverlay />

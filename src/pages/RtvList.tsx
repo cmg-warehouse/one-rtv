@@ -4,7 +4,7 @@ import { searchByAnyNumber } from '../api';
 import { BRANDS, DEMO_BRAND_ID, STORES } from '../data/masters';
 import { daysBetween } from '../domain/format';
 import { CHANNEL_LABELS, CN_LABELS, STEP_LABELS, cnType, isClosed, owner } from '../domain/rules';
-import type { Channel, CnType, Rtv, Step } from '../domain/types';
+import type { Channel, CnType, Role, Rtv, Step } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
 import { useRtvList } from '../state/useRtvs';
 
@@ -13,8 +13,10 @@ const STEPS = Object.keys(STEP_LABELS).map(Number) as Step[];
 export default function RtvList() {
   const { rtvs } = useRtvList();
   const { role, carrierActor } = useSession();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const q = params.get('q')?.trim() ?? '';
+  const ownerParam = params.get('owner') ?? '';
+  const ownerFilter = ownerParam in ROLE_LABELS ? (ownerParam as Role) : null;
   const [matches, setMatches] = useState<Rtv[] | null>(null);
   const [step, setStep] = useState('');
   const [channel, setChannel] = useState('');
@@ -30,6 +32,7 @@ export default function RtvList() {
 
   const base = q ? (matches ?? []) : rtvs;
   const rows = base.filter(r => {
+    if (ownerFilter && owner(r) !== ownerFilter) return false;
     if (step && r.step !== Number(step)) return false;
     if (channel && r.channel !== channel) return false;
     if (brand && r.brandId !== brand) return false;
@@ -73,7 +76,22 @@ export default function RtvList() {
   return (
     <div>
       <h1>รายการ RTV</h1>
+      <div className="card intro-card">
+        <p>One RTV: เลขเดียวที่ทุกฝ่ายใช้ติดตามงานคืนสินค้า ตั้งแต่เปิดคำสั่งจนออก CN</p>
+        <div className="intro-actions">
+          <Link className="btn btn-primary btn-sm" to="/tour">ดู Demo นำชม</Link>
+          <Link className="btn btn-sm" to="/flow">ดู Flow ภาพรวม</Link>
+        </div>
+      </div>
       {role === 'BRAND' && <p><Link className="btn btn-primary" to="/new">+ เปิดคำสั่งแจ้งเก็บ</Link></p>}
+      {ownerFilter && (
+        <p className="chips">
+          <span className="chip">ค้างที่: {ROLE_LABELS[ownerFilter]}{' '}
+            <button type="button" className="btn btn-sm" aria-label="ล้างตัวกรองค้างที่"
+              onClick={() => { const p = new URLSearchParams(params); p.delete('owner'); setParams(p); }}>✕</button>
+          </span>
+        </p>
+      )}
       {q && <h2>ผลการค้นหา "{q}"</h2>}
       <div className="card form-grid">
         <label className="field">สถานะ

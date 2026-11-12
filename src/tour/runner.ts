@@ -56,3 +56,8 @@ export function saveTour(s: TourState | null): void {
   } catch { /* in-memory copy carries on */ }
   window.dispatchEvent(new Event(TOUR_EVENT));
 }
+
+/** Forget any tour in progress (used by the data reset). */
+export function clearTour(): void {
+  saveTour(null);
+}

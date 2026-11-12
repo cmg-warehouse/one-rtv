@@ -1,8 +1,9 @@
 import { useState, type KeyboardEvent } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { searchByAnyNumber } from '../api';
+import { resetData, searchByAnyNumber } from '../api';
 import type { Role } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
+import { clearTour } from '../tour/runner';
 
 const NAV = [
   { to: '/', label: 'รายการ RTV', end: true },
@@ -26,6 +27,12 @@ export default function TopBar() {
     else if (hits.length === 1) navigate(`/rtv/${hits[0].id}`);
     else navigate(`/?q=${encodeURIComponent(term)}`);
   };
+  const onReset = async () => {
+    if (!window.confirm('ล้างข้อมูลที่ทดลองทำและกลับไปใช้ข้อมูลตั้งต้น?')) return;
+    clearTour();
+    await resetData();
+    navigate('/');
+  };
   return (
     <header className="topbar">
       <NavLink to="/" className="topbar-brand">
@@ -44,6 +51,7 @@ export default function TopBar() {
             <option key={r} value={r}>{ROLE_LABELS[r]}</option>
           ))}
         </select>
+        <button type="button" className="btn btn-sm" onClick={() => { void onReset(); }}>รีเซ็ตข้อมูล</button>
       </div>
       <nav>
         {role === 'CARRIER' && <NavLink to="/carrier" className="nav-link">งานขนส่ง</NavLink>}
