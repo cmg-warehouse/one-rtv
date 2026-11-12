@@ -5,7 +5,7 @@ import { DEMO_BRAND_ID } from '../data/masters';
 import { EXC_WAIT_PROMO, EXC_WAIT_RTV_NOTE, FLOW_COPY, FLOW_EXCEPTIONS } from '../data/flowCopy';
 import { STEP_LABELS, holds, isMallGroup, nextStep } from '../domain/rules';
 import type { Role, Rtv, Step } from '../domain/types';
-import { ROLE_LABELS, useSession } from '../state/session';
+import { ROLE_LABELS, asCarrierActor, useSession } from '../state/session';
 import { stepDocs } from './FlowOverview';
 import { FlowLinks, ScenarioSelect, useScenario } from './flowScenarios';
 
@@ -27,7 +27,8 @@ export default function FlowDetail() {
     if (!pick) { setMissing(n); return; }
     setMissing(null);
     setRole(role);
-    if (role === 'CARRIER' && (pick.carrier === 'PLAZA_4W' || pick.carrier === 'CG_NETWORK')) setCarrierActor(pick.carrier);
+    const actor = role === 'CARRIER' ? asCarrierActor(pick.carrier) : null;
+    if (actor) setCarrierActor(actor);
     navigate(`/rtv/${pick.id}`);
   };
 

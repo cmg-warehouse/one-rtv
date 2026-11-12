@@ -1,4 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { DEMO_BRAND_ID, ACTORS } from '../data/masters';
+import type { Identity } from '../domain/rules';
 import type { Carrier, Role } from '../domain/types';
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -10,6 +12,14 @@ export const ROLE_LABELS: Record<Role, string> = {
   ADMIN_CN: 'Admin CN',
   VIEWER: 'ผู้ดูภาพรวม',
 };
+
+export const CARRIER_ACTORS = ['PLAZA_4W', 'CG_NETWORK', 'AGREED'] as const;
+export type CarrierActor = (typeof CARRIER_ACTORS)[number];
+
+/** The carrier identity the demo can act as, or null for carriers it has no mobile view for (Parcel). */
+export function asCarrierActor(c: Carrier | null): CarrierActor | null {
+  return (CARRIER_ACTORS as readonly (Carrier | null)[]).includes(c) ? (c as CarrierActor) : null;
+}
 
 const ROLE_KEY = 'one-rtv.role';
 const DEFAULT_ROLE: Role = 'CS';
@@ -26,15 +36,16 @@ interface Session {
   role: Role;
   actor: string;
   setRole(r: Role): void;
-  carrierActor: Carrier;
-  setCarrierActor(c: 'PLAZA_4W' | 'CG_NETWORK'): void;
+  carrierActor: CarrierActor;
+  setCarrierActor(c: CarrierActor): void;
+  identity: Identity;
 }
 
 const SessionContext = createContext<Session | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [role, setRoleState] = useState<Role>(loadRole);
-  const [carrierActor, setCarrierActor] = useState<Carrier>('PLAZA_4W');
+  const [carrierActor, setCarrierActor] = useState<CarrierActor>('PLAZA_4W');
 
   const setRole = useCallback((r: Role) => {
     setRoleState(r);
@@ -42,7 +53,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<Session>(
-    () => ({ role, actor: ROLE_LABELS[role], setRole, carrierActor, setCarrierActor }),
+    () => ({
+      role, actor: ACTORS[role], setRole, carrierActor, setCarrierActor,
+      identity: { brandId: DEMO_BRAND_ID, carrier: carrierActor },
+    }),
     [role, setRole, carrierActor],
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

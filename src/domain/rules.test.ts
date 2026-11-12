@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import type { Carrier, Channel, SaleType } from './types';
 import {
-  allowedCarriers, cnType, holds, isClosed, nextStep, owner, requiredDocs, stepsFor, STEP_LABELS,
+  allowedCarriers, canAct, canSeeCnForm, cnType, holds, isClosed, matchesIdentity, nextStep, owner, requiredDocs, stepsFor,
+  STEP_LABELS, type Identity,
 } from './rules';
 import { rtv } from './testing';
 
@@ -87,4 +88,36 @@ test('requiredDocs', () => {
   expect(requiredDocs('TEMP_SHOP')).toEqual({ before: ['MIM', 'TK'], atCn: ['GEN104', 'PROMO_NO', 'MATDOC', 'CN'] });
   expect(requiredDocs('ETAX_CONSIGN')).toEqual({ before: ['RTV_NOTE', 'TK'], atCn: ['SALE_RETURN', 'DELIVERY', 'CN'] });
   expect(requiredDocs('ETAX_CREDIT').atCn).toEqual(['INVOICE_REF', 'SALE_RETURN', 'DELIVERY', 'CN']);
+});
+
+describe('identity scoping', () => {
+  const me: Identity = { brandId: 'brand-1', carrier: 'PLAZA_4W' };
+  const onHold = rtv({ channel: 'CONSIGN', carrier: 'CG_NETWORK', step: 9,
+    boxes: [{ no: 'x-B01', expectedPcs: 10, countedPcs: 10 }] });   // waits for the mall note: owner BRAND
+
+  test('Brand acts only on its own brand', () => {
+    expect(owner(onHold)).toBe('BRAND');
+    expect(canAct(onHold, 'BRAND', me)).toBe(true);
+    expect(canAct({ ...onHold, brandId: 'brand-2' }, 'BRAND', me)).toBe(false);
+  });
+  test('carrier acts only on its own carrier company', () => {
+    const job = rtv({ channel: 'SHOP', carrier: 'PLAZA_4W', step: 3 });
+    expect(owner(job)).toBe('CARRIER');
+    expect(canAct(job, 'CARRIER', me)).toBe(true);
+    expect(canAct({ ...job, carrier: 'CG_NETWORK' }, 'CARRIER', me)).toBe(false);
+    expect(canAct({ ...job, carrier: 'AGREED' }, 'CARRIER', { ...me, carrier: 'AGREED' })).toBe(true);
+  });
+  test('other roles need only the role match', () => {
+    const r = rtv({ step: 1 });
+    expect(canAct(r, 'CS', me)).toBe(true);
+    expect(canAct(r, 'WH', me)).toBe(false);
+    expect(matchesIdentity(r, 'CS', { brandId: 'zzz', carrier: 'AGREED' })).toBe(true);
+  });
+  test('Admin CN sees the CN form at step 9 during holds, but does not own the RTV', () => {
+    expect(canSeeCnForm(onHold, 'ADMIN_CN')).toBe(true);
+    expect(canAct(onHold, 'ADMIN_CN', me)).toBe(false);
+    expect(canSeeCnForm(onHold, 'BRAND')).toBe(false);
+    expect(canSeeCnForm({ ...onHold, step: 8 }, 'ADMIN_CN')).toBe(false);
+    expect(canSeeCnForm({ ...onHold, docs: [{ type: 'RTV_NOTE', value: 'n' }] }, 'ADMIN_CN')).toBe(false);
+  });
 });

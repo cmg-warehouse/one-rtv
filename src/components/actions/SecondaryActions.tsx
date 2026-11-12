@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BRAND_DOC_TYPES, canCancel as cancellable, DOC_LABELS } from '../../domain/rules';
+import { BRAND_DOC_TYPES, canCancel as cancellable, DOC_LABELS, matchesIdentity, type Identity } from '../../domain/rules';
 import type { DocType, Role, Rtv } from '../../domain/types';
 import { ErrorLine, useAct } from './useAct';
 
@@ -60,10 +60,13 @@ function AddDoc({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
   );
 }
 
-export default function SecondaryActions({ rtv, role, onDone }: { rtv: Rtv; role: Role; onDone: () => void }) {
-  const canCancel = (role === 'BRAND' || role === 'CS') && cancellable(rtv);
+interface Props { rtv: Rtv; role: Role; identity: Identity; onDone: () => void }
+
+export default function SecondaryActions({ rtv, role, identity, onDone }: Props) {
+  const own = matchesIdentity(rtv, role, identity);
+  const canCancel = (role === 'BRAND' || role === 'CS') && own && cancellable(rtv);
   const canClear = role === 'CS' && rtv.shortBoxes > 0;
-  const canAddDoc = role === 'BRAND';
+  const canAddDoc = role === 'BRAND' && own;
   if (!canCancel && !canClear && !canAddDoc) return null;
   return (
     <div className="card secondary-actions">

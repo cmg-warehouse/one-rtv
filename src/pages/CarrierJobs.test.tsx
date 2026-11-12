@@ -20,3 +20,12 @@ test('the carrier nav entry shows only for the carrier role', async () => {
   await userEvent.selectOptions(screen.getByLabelText('บทบาท'), 'CS');
   expect(screen.queryByRole('link', { name: 'งานขนส่ง' })).toBeNull();
 });
+
+test('local mall pickups (ขนส่งตามตกลง) appear under their own toggle', async () => {
+  await resetData();
+  renderAt('/carrier', 'CARRIER');
+  await userEvent.click(await screen.findByRole('button', { name: 'ขนส่งตามตกลง' }));
+  expect(screen.getByRole('button', { name: 'ขนส่งตามตกลง' })).toHaveAttribute('aria-pressed', 'true');
+  const cards = await screen.findAllByTestId('job-card');
+  cards.forEach(c => expect(c).toHaveTextContent('ขนส่งตามตกลง'));
+});

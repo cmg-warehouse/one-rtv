@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CHANGED_EVENT, getRtv } from '../api';
 import type { Rtv } from '../domain/types';
-import { ROLE_LABELS, useSession } from '../state/session';
+import { ROLE_LABELS, asCarrierActor, useSession } from '../state/session';
 import { back, isFinished, loadTour, next, saveTour, startStory, storyOf, TOUR_EVENT, type TourState } from '../tour/runner';
 
 /** Pulsing outline on the first primary action of the page (it may sit in the phone frame's footer). */
@@ -72,7 +72,8 @@ export default function TourOverlay() {
     void getRtv(tour.rtvId).then(r => {
       if (!live || !r) return;
       baseline.current = r;
-      if (stepDef?.role === 'CARRIER' && (r.carrier === 'PLAZA_4W' || r.carrier === 'CG_NETWORK')) setCarrierActor(r.carrier);
+      const actor = stepDef?.role === 'CARRIER' ? asCarrierActor(r.carrier) : null;
+      if (actor) setCarrierActor(actor);
     });
     return () => { live = false; };
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps

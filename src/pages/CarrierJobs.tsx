@@ -2,12 +2,10 @@ import { Link } from 'react-router-dom';
 import PhoneFrame from '../components/PhoneFrame';
 import { STORES } from '../data/masters';
 import { fmtDate } from '../domain/format';
-import { CARRIER_LABELS, nextStep, owner } from '../domain/rules';
+import { CARRIER_LABELS, canAct, nextStep } from '../domain/rules';
 import type { Rtv } from '../domain/types';
-import { useSession } from '../state/session';
+import { CARRIER_ACTORS, useSession } from '../state/session';
 import { useRtvList } from '../state/useRtvs';
-
-const CARRIERS = ['PLAZA_4W', 'CG_NETWORK'] as const;
 
 function JobCard({ rtv }: { rtv: Rtv }) {
   const store = STORES.find(s => s.id === rtv.storeId)?.name ?? rtv.storeId;
@@ -23,8 +21,8 @@ function JobCard({ rtv }: { rtv: Rtv }) {
 
 export default function CarrierJobs() {
   const { rtvs } = useRtvList();
-  const { carrierActor, setCarrierActor } = useSession();
-  const mine = rtvs.filter(r => owner(r) === 'CARRIER' && r.carrier === carrierActor);
+  const { carrierActor, setCarrierActor, identity } = useSession();
+  const mine = rtvs.filter(r => canAct(r, 'CARRIER', identity));
   const groups = [
     { title: 'รอรับงาน', jobs: mine.filter(r => nextStep(r)?.step === 4) },
     { title: 'รอเก็บสินค้า', jobs: mine.filter(r => nextStep(r)?.step === 5) },
@@ -33,7 +31,7 @@ export default function CarrierJobs() {
     <PhoneFrame>
       <h1>งานขนส่ง</h1>
       <div className="carrier-toggle">
-        {CARRIERS.map(c => (
+        {CARRIER_ACTORS.map(c => (
           <button key={c} type="button" className={`btn${carrierActor === c ? ' btn-primary' : ''}`}
             aria-pressed={carrierActor === c} onClick={() => setCarrierActor(c)}>{CARRIER_LABELS[c]}</button>
         ))}

@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { searchByAnyNumber } from '../api';
-import { BRANDS, DEMO_BRAND_ID, STORES } from '../data/masters';
+import { BRANDS, STORES } from '../data/masters';
 import { daysBetween } from '../domain/format';
-import { CHANNEL_LABELS, CN_LABELS, STEP_LABELS, STEPS, cnType, isClosed, owner } from '../domain/rules';
+import { CHANNEL_LABELS, CN_LABELS, STEP_LABELS, STEPS, canAct, cnType, isClosed, owner } from '../domain/rules';
 import type { Channel, CnType, Role, Rtv } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
 import { useRtvList } from '../state/useRtvs';
 
 export default function RtvList() {
   const { rtvs } = useRtvList();
-  const { role, carrierActor } = useSession();
+  const { role, identity } = useSession();
   const [params, setParams] = useSearchParams();
   const q = params.get('q')?.trim() ?? '';
   const ownerParam = params.get('owner') ?? '';
@@ -28,17 +28,17 @@ export default function RtvList() {
     return () => { live = false; };
   }, [q]);
 
-  const base = q ? (matches ?? []) : rtvs;
+  // Brand sees only its own brand's work (spec §9); every other role sees all brands.
+  const brandOnly = role === 'BRAND';
+  const brandName = BRANDS.find(b => b.id === identity.brandId)?.name ?? identity.brandId;
+  const found = q ? (matches ?? []) : rtvs;
+  const base = brandOnly ? found.filter(r => r.brandId === identity.brandId) : found;
   const rows = base.filter(r => {
     if (ownerFilter && owner(r) !== ownerFilter) return false;
     if (step && r.step !== Number(step)) return false;
     if (channel && r.channel !== channel) return false;
-    if (brand && r.brandId !== brand) return false;
-    if (mine) {
-      if (owner(r) !== role) return false;
-      if (role === 'BRAND' && r.brandId !== DEMO_BRAND_ID) return false;
-      if (role === 'CARRIER' && r.carrier !== carrierActor) return false;
-    }
+    if (brand && !brandOnly && r.brandId !== brand) return false;
+    if (mine && !canAct(r, role, identity)) return false;
     return true;
   });
   const now = new Date().toISOString();
@@ -90,6 +90,7 @@ export default function RtvList() {
           </span>
         </p>
       )}
+      {brandOnly && <p className="muted">แสดงเฉพาะงานของ {brandName}</p>}
       {q && <h2>ผลการค้นหา "{q}"</h2>}
       <div className="card form-grid">
         <label className="field">สถานะ
@@ -104,12 +105,14 @@ export default function RtvList() {
             {(Object.keys(CHANNEL_LABELS) as Channel[]).map(c => <option key={c} value={c}>{CHANNEL_LABELS[c]}</option>)}
           </select>
         </label>
-        <label className="field">แบรนด์
-          <select value={brand} onChange={e => setBrand(e.target.value)}>
-            <option value="">ทั้งหมด</option>
-            {BRANDS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        </label>
+        {!brandOnly && (
+          <label className="field">แบรนด์
+            <select value={brand} onChange={e => setBrand(e.target.value)}>
+              <option value="">ทั้งหมด</option>
+              {BRANDS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </label>
+        )}
         <label className="field check-field">
           <span><input type="checkbox" checked={mine} onChange={e => setMine(e.target.checked)} /> ค้างที่ฉัน</span>
         </label>

@@ -149,3 +149,23 @@ export function requiredDocs(cn: CnType): { before: DocType[]; atCn: DocType[] }
       return { before: ['RTV_NOTE', 'TK'], atCn: ['INVOICE_REF', 'SALE_RETURN', 'DELIVERY', 'CN'] };
   }
 }
+
+/** Who the demo user is acting as: the Brand's own id and the carrier company (UI-only scoping). */
+export interface Identity { brandId: string; carrier: Carrier }
+
+/** Does the RTV belong to this role's identity? Brand sees only its own, a carrier only its own jobs. */
+export function matchesIdentity(rtv: Rtv, role: Role, identity: Identity): boolean {
+  if (role === 'BRAND') return rtv.brandId === identity.brandId;
+  if (role === 'CARRIER') return rtv.carrier === identity.carrier;
+  return true;
+}
+
+/** The role must act on this RTV now, and the identity matches (own brand / own carrier). */
+export function canAct(rtv: Rtv, role: Role, identity: Identity): boolean {
+  return owner(rtv) === role && matchesIdentity(rtv, role, identity);
+}
+
+/** Admin CN also sees the (disabled) CN form at step 9 while Brand holds are open. */
+export function canSeeCnForm(rtv: Rtv, role: Role): boolean {
+  return role === 'ADMIN_CN' && !isClosed(rtv) && rtv.step === 9 && holds(rtv).length > 0;
+}

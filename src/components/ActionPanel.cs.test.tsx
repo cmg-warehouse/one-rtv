@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ACTORS, DEMO_BRAND_ID } from '../data/masters';
 import { renderAt, seeded } from '../testing';
 
 test('CS assigns parcel only with a tracking number, and no slip step follows', async () => {
@@ -53,11 +54,19 @@ test('CS can clear the short-box flag with a note', async () => {
 });
 
 test('brand can add a document number', async () => {
-  const r = await seeded(x => x.step < 5 && !x.cancelled);
+  const r = await seeded(x => x.step < 5 && !x.cancelled && x.brandId === DEMO_BRAND_ID);
   renderAt(`/rtv/${r.id}`, 'BRAND');
   await userEvent.click(await screen.findByRole('button', { name: 'เพิ่มเลขเอกสาร' }));
   await userEvent.selectOptions(screen.getByLabelText('ประเภทเอกสาร'), 'SD10');
   await userEvent.type(screen.getByLabelText('เลขเอกสาร'), 'SD10-TEST-1');
   await userEvent.click(screen.getByRole('button', { name: 'บันทึกเลขเอกสาร' }));
   expect(await screen.findByText(/เพิ่มเลขเอกสาร: SD10 \/ RTV Form: SD10-TEST-1/)).toBeInTheDocument();
+});
+
+test('hand-made timeline rows carry the named demo actor, like seeded ones', async () => {
+  const r = await seeded(x => x.carrier === 'PLAZA_4W' && x.step === 2);
+  renderAt(`/rtv/${r.id}`, 'CS');
+  await userEvent.click(await screen.findByRole('button', { name: 'ออกใบแจ้งเก็บ' }));
+  await screen.findByRole('link', { name: 'พิมพ์ใบแจ้งเก็บ' });
+  expect(screen.getAllByText(ACTORS.CS).length).toBeGreaterThan(0);
 });

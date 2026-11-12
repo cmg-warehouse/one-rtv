@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { DEMO_BRAND_ID } from '../data/masters';
-import { holds, isClosed, nextStep, owner } from '../domain/rules';
+import { canAct, canSeeCnForm, holds, isClosed, nextStep } from '../domain/rules';
 import type { Rtv } from '../domain/types';
 import { useSession } from '../state/session';
 import AssignCarrierForm from './actions/AssignCarrierForm';
@@ -31,12 +30,12 @@ function PrimaryForm({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
 
 /** Dispatcher: the step form for the role that owns the RTV now, plus that role's secondary actions. */
 export default function ActionPanel({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
-  const { role } = useSession();
+  const { role, identity } = useSession();
   if (rtv.cancelled || isClosed(rtv)) return null;
-  const mine = owner(rtv) === role;
+  const mine = canAct(rtv, role, identity);
   // While holds are active owner() is BRAND, but Admin CN still sees the (disabled) CN form.
-  const cnBlocked = role === 'ADMIN_CN' && rtv.step === 9 && !mine;
-  const brandHolds = role === 'BRAND' && rtv.brandId === DEMO_BRAND_ID && holds(rtv).length > 0;
+  const cnBlocked = canSeeCnForm(rtv, role);
+  const brandHolds = mine && role === 'BRAND' && holds(rtv).length > 0;
   const hasSlip = role === 'CS' && rtv.docs.some(d => d.type === 'PICKUP_SLIP');
   return (
     <>
@@ -44,7 +43,7 @@ export default function ActionPanel({ rtv, onDone }: { rtv: Rtv; onDone: () => v
         : cnBlocked ? <IssueCnForm rtv={rtv} onDone={onDone} />
         : mine && <PrimaryForm rtv={rtv} onDone={onDone} />}
       {hasSlip && <p><Link to={`/slip/${rtv.id}`}>พิมพ์ใบแจ้งเก็บ</Link></p>}
-      <SecondaryActions rtv={rtv} role={role} onDone={onDone} />
+      <SecondaryActions rtv={rtv} role={role} identity={identity} onDone={onDone} />
     </>
   );
 }
