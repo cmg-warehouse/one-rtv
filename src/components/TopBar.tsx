@@ -46,6 +46,7 @@ export default function TopBar() {
         </select>
       </div>
       <nav>
+        {role === 'CARRIER' && <NavLink to="/carrier" className="nav-link">งานขนส่ง</NavLink>}
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.end} className="nav-link">{n.label}</NavLink>
         ))}

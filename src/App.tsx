@@ -5,9 +5,9 @@ import RtvDetail from './pages/RtvDetail';
 import NewRtv from './pages/NewRtv';
 import PickupSlip from './pages/PickupSlip';
 import RtvList from './pages/RtvList';
+import CarrierJobs from './pages/CarrierJobs';
 
 const PAGES: { path: string; title: string }[] = [
-  { path: '/carrier', title: 'ขนส่ง' },
   { path: '/dashboard', title: 'Dashboard' },
   { path: '/flow', title: 'Flow' },
   { path: '/flow/detail', title: 'Flow รายละเอียด' },
@@ -22,6 +22,7 @@ export function AppShell() {
         <Routes>
           <Route path="/" element={<RtvList />} />
           <Route path="/rtv/:id" element={<RtvDetail />} />
+          <Route path="/carrier" element={<CarrierJobs />} />
           <Route path="/new" element={<NewRtv />} />
           <Route path="/slip/:id" element={<PickupSlip />} />
           {PAGES.map((p) => (

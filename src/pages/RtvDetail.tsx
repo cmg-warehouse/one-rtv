@@ -3,17 +3,19 @@ import ActionPanel from '../components/ActionPanel';
 import BoxList from '../components/BoxList';
 import DocRefTable from '../components/DocRefTable';
 import HoldBanner from '../components/HoldBanner';
+import PhoneFrame from '../components/PhoneFrame';
 import StatusBar from '../components/StatusBar';
 import Timeline from '../components/Timeline';
 import { BRANDS, STORES } from '../data/masters';
 import { fmtDate } from '../domain/format';
 import { CARRIER_LABELS, CHANNEL_LABELS, CN_LABELS, cnType, isClosed, owner } from '../domain/rules';
-import { ROLE_LABELS } from '../state/session';
+import { ROLE_LABELS, useSession } from '../state/session';
 import { useRtv } from '../state/useRtvs';
 
 export default function RtvDetail() {
   const { id = '' } = useParams();
   const { rtv, refresh } = useRtv(id);
+  const { role } = useSession();
   if (rtv === undefined) return <p className="muted">กำลังโหลด…</p>;
   if (rtv === null) {
     return (
@@ -27,7 +29,7 @@ export default function RtvDetail() {
   const ownerText = rtv.cancelled ? 'ยกเลิกแล้ว' : isClosed(rtv) ? 'ปิดงานแล้ว' : own ? `ค้างที่: ${ROLE_LABELS[own]}` : '—';
   const brand = BRANDS.find(b => b.id === rtv.brandId)?.name ?? rtv.brandId;
   const store = STORES.find(s => s.id === rtv.storeId)?.name ?? rtv.storeId;
-  return (
+  const page = (
     <div className="rtv-detail">
       <div className="card">
         <h1 className="rtv-id mono">{rtv.id}</h1>
@@ -52,4 +54,5 @@ export default function RtvDetail() {
       <div className="card"><h2>ประวัติรายการ</h2><Timeline events={rtv.events} /></div>
     </div>
   );
+  return role === 'CARRIER' ? <PhoneFrame>{page}</PhoneFrame> : page;
 }
