@@ -180,7 +180,8 @@ export function clearShortFlag(rtv: Rtv, note: string, ctx: Ctx): Rtv {
   requireOpen(rtv);
   requireRole(ctx, 'CS');
   if (rtv.shortBoxes === 0) throw new FlowError('ไม่มีกล่องขาดที่ต้องปิด');
-  return next(rtv, { shortBoxes: 0 }, [ev(ctx, 'FLAG_CLEARED', { note: note.trim() || undefined })]);
+  const text = requireText(note, 'กรุณากรอกหมายเหตุ');
+  return next(rtv, { shortBoxes: 0 }, [ev(ctx, 'FLAG_CLEARED', { note: text })]);
 }
 
 function requireStep9Brand(rtv: Rtv, ctx: Ctx): void {

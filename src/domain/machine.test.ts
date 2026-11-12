@@ -3,7 +3,7 @@ import {
   FlowError, addDoc, advance, brandConfirmQty, brandRequestRecount, cancel, clearShortFlag,
   confirmPromo, createRtv, failPickup, rtvId,
 } from './machine';
-import type { Ctx } from './machine';
+import type { Ctx, StepPayload } from './machine';
 import { consignInput, toStep } from './testing';
 import type { Role } from './types';
 
@@ -66,6 +66,7 @@ test('short box flags but does not stop', () => {
   expect(r.events.some(e => e.kind === 'SHORT_BOX')).toBe(true);
   expect(clearShortFlag(r, 'พบกล่องที่สาขา', as('CS')).shortBoxes).toBe(0);
   expect(() => clearShortFlag(r, 'x', as('WH'))).toThrow(FlowError);
+  expect(() => clearShortFlag(r, '  ', as('CS'))).toThrow('หมายเหตุ');
 });
 test('count validation at step 9', () => {
   const r = toStep(shop(), 8);
@@ -157,4 +158,8 @@ describe('purity', () => {
     addDoc(r, { type: 'SD10', value: '1' }, as('BRAND'));
     expect(r).toEqual(snapshot);
   });
+});
+
+test('step 2 without a carrier is refused with a Thai message', () => {
+  expect(() => advance(shop(), { step: 2, pickupDate: '2026-11-13' } as unknown as StepPayload, as('CS'))).toThrow('ขนส่ง');
 });

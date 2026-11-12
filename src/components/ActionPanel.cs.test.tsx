@@ -44,6 +44,8 @@ test('CS can clear the short-box flag with a note', async () => {
   const r = await seeded(x => x.shortBoxes > 0 && !x.cancelled);
   renderAt(`/rtv/${r.id}`, 'CS');
   await userEvent.click(await screen.findByRole('button', { name: 'ปิดธงกล่องขาด' }));
+  await userEvent.click(screen.getByRole('button', { name: 'ยืนยันปิดธง' }));
+  expect(await screen.findByText(/หมายเหตุ/, { selector: '.error' })).toBeInTheDocument();
   await userEvent.type(screen.getByLabelText('หมายเหตุ'), 'พบกล่องแล้ว');
   await userEvent.click(screen.getByRole('button', { name: 'ยืนยันปิดธง' }));
   expect(await screen.findByText(/ปิดธงกล่องขาด: พบกล่องแล้ว/)).toBeInTheDocument();

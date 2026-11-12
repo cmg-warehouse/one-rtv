@@ -8,13 +8,13 @@ export default function AssignCarrierForm({ rtv, onDone }: { rtv: Rtv; onDone: (
   const [carrier, setCarrier] = useState<Carrier | ''>(options.length === 1 ? options[0] : '');
   const [pickupDate, setPickupDate] = useState('');
   const [carrierRef, setCarrierRef] = useState('');
-  const { run, error, busy, setError } = useAct(rtv, onDone);
+  const { run, error, busy } = useAct(rtv, onDone);
 
+  // An unselected carrier is sent as-is: the machine rejects it with its own message.
   const submit = () => {
-    if (!carrier) { setError('กรุณาเลือกขนส่ง'); return; }
     void run({
       type: 'advance',
-      payload: { step: 2, carrier, pickupDate, carrierRef: carrier === 'PARCEL' ? carrierRef : undefined },
+      payload: { step: 2, carrier: carrier as Carrier, pickupDate, carrierRef: carrier === 'PARCEL' ? carrierRef : undefined },
     });
   };
 

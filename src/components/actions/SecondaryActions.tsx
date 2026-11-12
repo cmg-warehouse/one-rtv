@@ -25,7 +25,7 @@ function CancelAction({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
 function ClearShortFlag({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
-  const { run, error, busy, setError } = useAct(rtv, onDone);
+  const { run, error, busy } = useAct(rtv, onDone);
   if (!open) return <button type="button" className="btn" onClick={() => setOpen(true)}>ปิดธงกล่องขาด</button>;
   return (
     <div className="secondary-form">
@@ -34,10 +34,7 @@ function ClearShortFlag({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
       </label>
       <ErrorLine message={error} />
       <button type="button" className="btn" disabled={busy}
-        onClick={() => {
-          if (!note.trim()) { setError('กรุณากรอกหมายเหตุ'); return; }
-          void run({ type: 'clearShortFlag', note });
-        }}>ยืนยันปิดธง</button>
+        onClick={() => { void run({ type: 'clearShortFlag', note }); }}>ยืนยันปิดธง</button>
     </div>
   );
 }
