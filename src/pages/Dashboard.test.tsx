@@ -20,7 +20,7 @@ test('shows KPI tiles, step bars and segment tiles', async () => {
   expect(await screen.findByText('งานเปิด')).toBeInTheDocument();
   expect(screen.getByText('ปิดแล้ว')).toBeInTheDocument();
   expect(screen.getByText('กล่องขาดที่ยังเปิด')).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'งานตามสถานะ' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'งานเปิดตามสถานะ' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'เวลาเฉลี่ยแต่ละช่วง' })).toBeInTheDocument();
   expect(screen.getByText('เก็บ → CMG รับ')).toBeInTheDocument();
 });
@@ -40,4 +40,21 @@ test('home page offers the guided tour in one click', async () => {
   renderAt('/', 'VIEWER');
   expect(await screen.findByRole('link', { name: 'ดู Demo นำชม' })).toHaveAttribute('href', '/tour');
   expect(screen.getByRole('link', { name: 'ดู Flow ภาพรวม' })).toHaveAttribute('href', '/flow');
+});
+
+test('open work by step lists steps 1-9 only; the hold table has four rows and shows a dash for an empty hold', async () => {
+  renderAt('/dashboard', 'VIEWER');
+  const section = (await screen.findByRole('heading', { name: 'งานเปิดตามสถานะ' })).nextElementSibling as HTMLElement;
+  const labels = [...section.querySelectorAll('.bar-label')].map(e => e.textContent);
+  expect(labels).toHaveLength(9);
+  expect(labels.some(l => l!.startsWith('10.'))).toBe(false);
+
+  const holdTable = screen.getByRole('heading', { name: 'งานที่รอ Brand / ฝ่ายขาย' }).nextElementSibling as HTMLElement;
+  const rows = within(holdTable).getAllByRole('row').slice(1);
+  expect(rows.map(r => within(r).getAllByRole('cell')[0].textContent))
+    .toEqual(['รอ Brand ยืนยันยอด', 'รอ RTV Note', 'รอเลข MIM', 'รอยืนยัน Promotion']);
+  const mim = within(rows[2]).getAllByRole('cell');
+  expect(mim[1]).toHaveTextContent('0');
+  expect(mim[2]).toHaveTextContent('—');
+  expect(mim[2]).not.toHaveTextContent('วัน');
 });

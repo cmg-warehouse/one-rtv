@@ -105,6 +105,7 @@ export function advance(rtv: Rtv, payload: StepPayload, ctx: Ctx): Rtv {
 
   switch (payload.step) {
     case 2: {
+      if (!payload.carrier) throw new FlowError('กรุณาเลือกขนส่ง');
       if (!allowedCarriers(rtv.channel).includes(payload.carrier)) {
         throw new FlowError('ขนส่งนี้ใช้ไม่ได้กับช่องทางนี้');
       }

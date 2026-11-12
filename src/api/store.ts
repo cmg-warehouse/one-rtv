@@ -5,6 +5,8 @@ const KEY = 'one-rtv.data.v1';
 
 // Kept so the app still works for the page session when localStorage is unavailable.
 let cache: Rtv[] | null = null;
+// True after a failed write: the in-memory copy is then newer than whatever is stored.
+let dirty = false;
 
 function readStored(): Rtv[] | null {
   try {
@@ -20,10 +22,14 @@ export function saveAll(list: Rtv[]): void {
   cache = list;
   try {
     localStorage.setItem(KEY, JSON.stringify(list));
-  } catch { /* storage unavailable: the in-memory copy carries on */ }
+    dirty = false;
+  } catch {
+    dirty = true; // storage unavailable: the in-memory copy carries on
+  }
 }
 
 export function loadAll(): Rtv[] {
+  if (dirty && cache) return cache;
   const stored = readStored();
   if (stored) {
     cache = stored;
@@ -42,4 +48,5 @@ export function resetAll(): void {
 /** Test helper: forget the in-memory copy so the next load starts cold. */
 export function __clearCache(): void {
   cache = null;
+  dirty = false;
 }

@@ -72,3 +72,18 @@ test('non-numeric box count shows the Thai error and changes nothing', async () 
   expect(await screen.findByText(/จำนวนกล่อง/, { selector: '.error' })).toBeInTheDocument();
   expect((await getRtv(r.id))!.step).toBe(5);
 });
+
+test('on a consign order the reason form closes after a failed pickup is logged, so it cannot be logged twice', async () => {
+  const r = await seeded(x => x.channel === 'CONSIGN' && x.step === 4 && !x.cancelled);
+  renderAt('/carrier', 'CARRIER');
+  await userEvent.click(await screen.findByRole('button', { name: 'CG Network' }));
+  await userEvent.click(await screen.findByRole('link', { name: r.id }));
+  await userEvent.click(await screen.findByRole('button', { name: 'เก็บไม่สำเร็จ' }));
+  await userEvent.click(screen.getByLabelText('ร้านปิด'));
+  await userEvent.click(screen.getByRole('button', { name: 'ยืนยันเก็บไม่สำเร็จ' }));
+  expect(await screen.findByText(/เก็บไม่สำเร็จ: ร้านปิด/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'ยืนยันเก็บไม่สำเร็จ' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'เก็บไม่สำเร็จ' })).toBeInTheDocument();
+  const after = (await getRtv(r.id))!;
+  expect(after.events.filter(e => e.kind === 'PICKUP_FAILED')).toHaveLength(1);
+});

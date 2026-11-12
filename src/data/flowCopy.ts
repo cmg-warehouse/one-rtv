@@ -4,10 +4,7 @@ export interface FlowCopy {
   what: string;
   records: string[];
   docs: DocType[];
-  screen: (rtvId: string) => string;
 }
-
-const detail = (id: string) => `/rtv/${id}`;
 
 /** Thai explanation of each step (spec §5.1). Step 10 documents depend on the scenario and are computed by the page. */
 export const FLOW_COPY: Record<Step, FlowCopy> = {
@@ -15,61 +12,51 @@ export const FLOW_COPY: Record<Step, FlowCopy> = {
     what: 'Brand / ฝ่ายขายเปิดคำสั่งแจ้งเก็บสินค้า ระบบออกเลข RTV หลักให้ทันที',
     records: ['สาขา', 'แบรนด์', 'ประเภท', 'จำนวนกล่อง', 'เลขเอกสารที่มี'],
     docs: ['MIM', 'SD10', 'RTV_NOTE'],
-    screen: () => '/new',
   },
   2: {
     what: 'CS คลังรับเรื่อง เลือกขนส่ง และกำหนดวันนัดเก็บสินค้า',
     records: ['ขนส่ง', 'วันนัดเก็บ'],
     docs: ['CARRIER_REF'],
-    screen: detail,
   },
   3: {
     what: 'CS ออกใบแจ้งเก็บให้ขนส่งนำไปใช้ที่สาขา',
     records: ['เลขใบแจ้งเก็บ'],
     docs: ['PICKUP_SLIP'],
-    screen: detail,
   },
   4: {
     what: 'ขนส่งกดรับงานเก็บสินค้า',
     records: ['เวลา'],
     docs: [],
-    screen: detail,
   },
   5: {
     what: 'ขนส่งเก็บสินค้าที่สาขา แล้วบันทึกเวลาและจำนวนกล่องที่เก็บได้',
     records: ['เวลา', 'จำนวนกล่องที่เก็บได้'],
     docs: [],
-    screen: detail,
   },
   6: {
     what: 'SCDC รับสินค้าเข้า crossdock และนับกล่อง',
     records: ['เวลา', 'จำนวนกล่อง'],
     docs: [],
-    screen: detail,
   },
   7: {
     what: 'SCDC ส่งสินค้าต่อไปที่คลัง CMG',
     records: ['เวลา'],
     docs: [],
-    screen: detail,
   },
   8: {
     what: 'คลัง CMG รับสินค้าและนับกล่อง',
     records: ['เวลา', 'จำนวนกล่อง'],
     docs: [],
-    screen: detail,
   },
   9: {
     what: 'คลัง CMG ตรวจนับจำนวนชิ้นเทียบกับเอกสาร และใส่เลข TK',
     records: ['เลข TK', 'จำนวนชิ้นเทียบเอกสาร'],
     docs: ['TK'],
-    screen: detail,
   },
   10: {
     what: 'Admin CN ใส่เลขเอกสาร SAP ออก CN และปิดงาน',
     records: ['เลข CN', 'เลข SAP'],
     docs: [],
-    screen: detail,
   },
 };
 

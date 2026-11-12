@@ -5,11 +5,13 @@ import { ROLE_LABELS } from '../state/session';
 import { useRtvList } from '../state/useRtvs';
 
 const days = (n: number | null): string => (n === null ? '—' : `${n.toFixed(1)} วัน`);
+/** Steps an open RTV can be at: step 10 means closed, so it never appears among open work. */
+const OPEN_STEPS = STEPS.filter(s => s !== 10);
 
 export default function Dashboard() {
   const { rtvs } = useRtvList();
   const m = computeMetrics(rtvs, new Date().toISOString());
-  const maxStep = Math.max(1, ...STEPS.map(s => m.byStep[s]));
+  const maxStep = Math.max(1, ...OPEN_STEPS.map(s => m.byStep[s]));
 
   return (
     <div>
@@ -20,9 +22,9 @@ export default function Dashboard() {
         <div className="kpi-tile kpi-alert"><div className="kpi-label">กล่องขาดที่ยังเปิด</div><div className="kpi-value">{m.shortBoxOpen}</div></div>
       </div>
 
-      <h2>งานตามสถานะ</h2>
+      <h2>งานเปิดตามสถานะ</h2>
       <div className="card">
-        {STEPS.map(s => (
+        {OPEN_STEPS.map(s => (
           <div className="bar-row" key={s}>
             <span className="bar-label">{s}. {STEP_LABELS[s]}</span>
             <span className="bar-track"><span className="bar-fill" style={{ width: `${(m.byStep[s] / maxStep) * 100}%` }} /></span>
@@ -57,7 +59,7 @@ export default function Dashboard() {
               <tr key={h}>
                 <td>{HOLD_LABELS[h]}</td>
                 <td className="num">{m.byHold[h].count}</td>
-                <td className="num">{days(m.byHold[h].avgWaitDays)}</td>
+                <td className="num">{m.byHold[h].count === 0 ? '—' : days(m.byHold[h].avgWaitDays)}</td>
               </tr>
             ))}
           </tbody>

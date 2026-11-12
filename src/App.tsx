@@ -1,4 +1,4 @@
-import { HashRouter, Route, Routes, useParams } from 'react-router-dom';
+import { HashRouter, Link, Route, Routes, useParams } from 'react-router-dom';
 import { SessionProvider } from './state/session';
 import TopBar from './components/TopBar';
 import RtvDetail from './pages/RtvDetail';
@@ -18,6 +18,15 @@ function RtvDetailRoute() {
   return <RtvDetail key={id} />;
 }
 
+function NotFound() {
+  return (
+    <div className="card empty">
+      <p>ไม่พบหน้านี้</p>
+      <Link to="/">กลับไปหน้ารายการ</Link>
+    </div>
+  );
+}
+
 export function AppShell() {
   return (
     <>
@@ -33,6 +42,7 @@ export function AppShell() {
           <Route path="/flow" element={<FlowOverview />} />
           <Route path="/flow/detail" element={<FlowDetail />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <TourOverlay />

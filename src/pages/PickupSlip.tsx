@@ -12,17 +12,18 @@ export default function PickupSlip() {
   if (rtv === null) return <div className="card empty"><p>ไม่พบเลข RTV นี้</p><Link to="/">กลับไปหน้ารายการ</Link></div>;
   const slip = rtv.docs.find(d => d.type === 'PICKUP_SLIP')?.value;
   if (!slip) {
-    return <div className="card empty"><p>ยังไม่ได้ออกใบแจ้งเก็บ</p><Link to={`/rtv/${rtv.id}`}>กลับไปหน้ารายการ</Link></div>;
+    return <div className="card empty"><p>ยังไม่ได้ออกใบแจ้งเก็บ</p><Link to={`/rtv/${rtv.id}`}>กลับไปหน้า RTV นี้</Link></div>;
   }
   const brand = BRANDS.find(b => b.id === rtv.brandId)?.name ?? rtv.brandId;
   const store = STORES.find(s => s.id === rtv.storeId)?.name ?? rtv.storeId;
   return (
     <div className="slip-page">
       <div className="no-print slip-actions">
-        <Link to={`/rtv/${rtv.id}`}>กลับไปหน้ารายการ</Link>
+        <Link to={`/rtv/${rtv.id}`}>กลับไปหน้า RTV นี้</Link>
         <button type="button" className="btn btn-primary" onClick={() => window.print()}>พิมพ์</button>
       </div>
       <article className="slip">
+        <p className="slip-demo">ตัวอย่างเพื่อการสาธิต</p>
         <header className="slip-head">
           <img src="./cmg-logo.png" alt="CMG" className="slip-logo" />
           <div>

@@ -192,3 +192,10 @@ describe('WAIT_MIM', () => {
       .toThrow(/เอกสารยังไม่ครบ: TK/);
   });
 });
+
+test('step 2 without a carrier asks to choose one; a carrier the channel does not allow keeps its own message', () => {
+  expect(() => advance(shop(), { step: 2, pickupDate: '2026-11-13' } as unknown as StepPayload, as('CS')))
+    .toThrow('กรุณาเลือกขนส่ง');
+  expect(() => advance(shop(), { step: 2, carrier: 'AGREED', pickupDate: '2026-11-13' }, as('CS')))
+    .toThrow('ขนส่งนี้ใช้ไม่ได้กับช่องทางนี้');
+});

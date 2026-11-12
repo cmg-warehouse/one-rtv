@@ -29,7 +29,7 @@ export default function FailPickupForm({ rtv, onDone, block }: { rtv: Rtv; onDon
       )}
       <ErrorLine message={error} />
       <button type="button" className={`btn${block ? ' btn-block' : ''}`} disabled={busy}
-        onClick={() => { void run({ type: 'failPickup', reason }); }}>ยืนยันเก็บไม่สำเร็จ</button>
+        onClick={() => { void run({ type: 'failPickup', reason }).then(ok => { if (ok) { setOpen(false); setChoice(''); setOther(''); } }); }}>ยืนยันเก็บไม่สำเร็จ</button>
     </div>
   );
 }

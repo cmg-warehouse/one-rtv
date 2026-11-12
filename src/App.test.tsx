@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
+import { renderAt } from './testing';
 
 test('top bar shows CRL logo, search box and all 7 roles', () => {
   render(<App />);
@@ -17,4 +18,10 @@ test('chosen role survives a remount', async () => {
 test('footer banner states the data is mock', () => {
   render(<App />);
   expect(screen.getByText('ข้อมูลจำลองเพื่อการสาธิต — ยังไม่เชื่อมต่อ SAP / Sprint FC')).toBeInTheDocument();
+});
+
+test('an unknown address shows a friendly page with a way back', async () => {
+  renderAt('/no-such-page');
+  expect(await screen.findByText('ไม่พบหน้านี้')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'กลับไปหน้ารายการ' })).toHaveAttribute('href', '/');
 });
