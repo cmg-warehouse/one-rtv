@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
+import ActionPanel from '../components/ActionPanel';
 import BoxList from '../components/BoxList';
 import DocRefTable from '../components/DocRefTable';
 import HoldBanner from '../components/HoldBanner';
@@ -12,7 +13,7 @@ import { useRtv } from '../state/useRtvs';
 
 export default function RtvDetail() {
   const { id = '' } = useParams();
-  const { rtv } = useRtv(id);
+  const { rtv, refresh } = useRtv(id);
   if (rtv === undefined) return <p className="muted">กำลังโหลด…</p>;
   if (rtv === null) {
     return (
@@ -45,7 +46,7 @@ export default function RtvDetail() {
       </div>
       <HoldBanner rtv={rtv} />
       <div className="card"><StatusBar rtv={rtv} /></div>
-      <div data-testid="actions" />
+      <div data-testid="actions"><ActionPanel rtv={rtv} onDone={refresh} /></div>
       <div className="card"><h2>เลขเอกสารอ้างอิง</h2><DocRefTable rtv={rtv} /></div>
       <div className="card"><h2>กล่อง</h2><BoxList boxes={rtv.boxes} /></div>
       <div className="card"><h2>ประวัติรายการ</h2><Timeline events={rtv.events} /></div>

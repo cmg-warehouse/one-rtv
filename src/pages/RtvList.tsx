@@ -45,6 +45,7 @@ export default function RtvList() {
   return (
     <div>
       <h1>รายการ RTV</h1>
+      {role === 'BRAND' && <p><Link className="btn btn-primary" to="/new">+ เปิดคำสั่งแจ้งเก็บ</Link></p>}
       {q && <h2>ผลการค้นหา "{q}"</h2>}
       <div className="card form-grid">
         <label className="field">สถานะ

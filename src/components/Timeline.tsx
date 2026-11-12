@@ -9,8 +9,8 @@ export function eventText(e: RtvEvent): string {
   switch (e.kind) {
     case 'STEP': {
       const label = e.step ? STEP_LABELS[e.step] : 'เปลี่ยนสถานะ';
-      const note = e.note?.replace(/^อัตโนมัติ:\s*/, '');
-      return [e.auto ? `${label} (อัตโนมัติ)` : label, note].filter(Boolean).join(' — ');
+      const noteSaysAuto = e.note?.startsWith('อัตโนมัติ') ?? false;
+      return [e.auto && !noteSaysAuto ? `${label} (อัตโนมัติ)` : label, e.note].filter(Boolean).join(' — ');
     }
     case 'PICKUP_FAILED': return withNote('เก็บไม่สำเร็จ', e.note);
     case 'SHORT_BOX': return withNote('กล่องขาด', e.note);

@@ -26,3 +26,25 @@ main.container { flex: 1; width: 100%; box-sizing: border-box; }
 .check-field { justify-content: flex-end; }
 .topbar-search { position: relative; }
 .search-error { position: absolute; top: 100%; left: 0; font-size: 13px; color: var(--status-alert); background: #fff; padding: 2px 6px; }
+.radio-row { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+fieldset.field { border: 0; padding: 0; margin: 0; }
+.box-row { display: flex; gap: 8px; align-items: flex-end; }
+.box-row .field { flex: 1; }
+.secondary-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.secondary-form { display: flex; flex-direction: column; gap: 8px; min-width: 260px; }
+.slip-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.slip { background: #fff; color: #000; max-width: 190mm; margin: 0 auto; padding: 12mm; border: 1px solid var(--color-border); }
+.slip-head { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
+.slip-head h1 { margin: 0 0 4px; font-size: 24px; }
+.slip-logo { height: 48px; }
+.slip table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.slip th, .slip td { border: 1px solid #999; padding: 6px 10px; text-align: left; }
+.slip .num { text-align: right; }
+.slip-info th { width: 30%; background: #f3f3f3; }
+.slip-sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; text-align: center; }
+.sign-line { display: block; border-bottom: 1px solid #000; height: 48px; margin-bottom: 6px; }
+@media print {
+  .topbar, .mock-banner, .no-print { display: none !important; }
+  .slip { border: 0; padding: 0; max-width: none; }
+  @page { size: A4; margin: 15mm; }
+}
