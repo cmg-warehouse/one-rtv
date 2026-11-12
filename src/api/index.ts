@@ -10,6 +10,12 @@ export type Action =
 
 interface Actor { role: Role; actor: string }
 
+/** Window event fired after every successful write, so open pages and the tour overlay can refresh. */
+export const CHANGED_EVENT = 'one-rtv:changed';
+function notify(id?: string): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(CHANGED_EVENT, { detail: id }));
+}
+
 const withNow = (a: Actor): Ctx => ({ role: a.role, actor: a.actor, now: new Date().toISOString() });
 const seqOf = (id: string): number => Number(id.split('-').pop()) || 0;
 
@@ -39,6 +45,7 @@ export async function createRtv(input: NewRtvInput, actor: Actor): Promise<Rtv> 
   const seq = Math.max(0, ...all.map(r => seqOf(r.id))) + 1;
   const rtv = machine.createRtv(input, seq, withNow(actor));
   saveAll([...all, rtv]);
+  notify(rtv.id);
   return rtv;
 }
 
@@ -48,6 +55,7 @@ export async function act(id: string, action: Action, actor: Actor): Promise<Rtv
   if (!current) throw new Error(`ไม่พบรายการ ${id}`);
   const updated = apply(current, action, withNow(actor));
   saveAll(all.map(r => (r.id === id ? updated : r)));
+  notify(id);
   return updated;
 }
 
@@ -62,8 +70,10 @@ export async function searchByAnyNumber(q: string): Promise<Rtv[]> {
 export async function putRtv(rtv: Rtv): Promise<void> {
   const all = loadAll();
   saveAll(all.some(r => r.id === rtv.id) ? all.map(r => (r.id === rtv.id ? rtv : r)) : [...all, rtv]);
+  notify(rtv.id);
 }
 
 export async function resetData(): Promise<void> {
   resetAll();
+  notify();
 }

@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getRtv, listRtvs } from '../api';
+import { CHANGED_EVENT, getRtv, listRtvs } from '../api';
 import type { Rtv } from '../domain/types';
+
+/** Re-reads whenever any write goes through the API (e.g. the guided tour acting for a role). */
+function useRefreshOnChange(refresh: () => void): void {
+  useEffect(() => {
+    window.addEventListener(CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(CHANGED_EVENT, refresh);
+  }, [refresh]);
+}
 
 /** `undefined` = loading, `null` = not found. */
 export function useRtv(id: string): { rtv: Rtv | null | undefined; refresh(): void } {
@@ -12,6 +20,7 @@ export function useRtv(id: string): { rtv: Rtv | null | undefined; refresh(): vo
     return () => { live = false; };
   }, [id, tick]);
   const refresh = useCallback(() => setTick(t => t + 1), []);
+  useRefreshOnChange(refresh);
   return { rtv, refresh };
 }
 
@@ -24,5 +33,6 @@ export function useRtvList(): { rtvs: Rtv[]; refresh(): void } {
     return () => { live = false; };
   }, [tick]);
   const refresh = useCallback(() => setTick(t => t + 1), []);
+  useRefreshOnChange(refresh);
   return { rtvs, refresh };
 }
