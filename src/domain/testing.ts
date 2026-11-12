@@ -28,6 +28,11 @@ export const consignInput: NewRtvInput = {
   boxPcs: [8, 5], docs: [{ type: 'MIM', value: '26000200' }],
 };
 
+export const shopInput: NewRtvInput = {
+  brandId: 'B1', storeId: 'S1', channel: 'SHOP', saleType: 'NORMAL',
+  boxPcs: [10, 6], docs: [{ type: 'MIM', value: '26000100' }],
+};
+
 const ctxFor = (role: Role): Ctx => ({ role, actor: 'ทดสอบ', now: '2026-11-12T03:00:00Z' });
 
 /** Advance along the happy path until the RTV has completed `step`. */
