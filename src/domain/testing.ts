@@ -56,6 +56,7 @@ export function toStep(start: Rtv, step: Step): Rtv {
         if (!r.docs.some(d => d.type === 'RTV_NOTE') && requiredDocs(cnType(r.channel, r.saleType)).before.includes('RTV_NOTE')) {
           r = addDoc(r, { type: 'RTV_NOTE', value: 'RN-TEST' }, ctxFor('BRAND'));
         }
+        if (holds(r).includes('WAIT_MIM')) r = addDoc(r, { type: 'MIM', value: 'MIM-TEST' }, ctxFor('BRAND'));
         if (r.saleType === 'PROMO' && !r.promoConfirmed) r = confirmPromo(r, ctxFor('BRAND'));
         if (holds(r).length > 0) throw new Error('toStep: RTV is on hold');
         const docs: Partial<Record<DocType, string>> = {};

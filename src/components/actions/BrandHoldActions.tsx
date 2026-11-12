@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { HOLD_LABELS, holds } from '../../domain/rules';
-import type { Hold, Rtv } from '../../domain/types';
+import { DOC_LABELS, HOLD_LABELS, holds } from '../../domain/rules';
+import type { DocType, Hold, Rtv } from '../../domain/types';
 import { ErrorLine, useAct } from './useAct';
 
 function QtySection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; primary: boolean }) {
@@ -33,21 +33,27 @@ function QtySection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; pr
   );
 }
 
-function NoteSection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; primary: boolean }) {
+interface SectionProps { rtv: Rtv; onDone: () => void; primary: boolean }
+
+/** A hold released by Brand typing one document number. */
+function DocSection({ rtv, onDone, primary, hold, doc }: SectionProps & { hold: Hold; doc: DocType }) {
   const [value, setValue] = useState('');
   const { run, error, busy } = useAct(rtv, onDone);
   return (
     <div className="card">
-      <h2>{HOLD_LABELS.WAIT_RTV_NOTE}</h2>
-      <label className="field">RTV Note (ห้าง)
+      <h2>{HOLD_LABELS[hold]}</h2>
+      <label className="field">{DOC_LABELS[doc]}
         <input value={value} onChange={e => setValue(e.target.value)} />
       </label>
       <ErrorLine message={error} />
       <button type="button" className="btn btn-primary" data-tour={primary ? 'primary' : undefined} disabled={busy}
-        onClick={() => { void run({ type: 'addDoc', doc: { type: 'RTV_NOTE', value } }); }}>บันทึกเลข</button>
+        onClick={() => { void run({ type: 'addDoc', doc: { type: doc, value } }); }}>บันทึกเลข</button>
     </div>
   );
 }
+
+const NoteSection = (p: SectionProps) => <DocSection {...p} hold="WAIT_RTV_NOTE" doc="RTV_NOTE" />;
+const MimSection = (p: SectionProps) => <DocSection {...p} hold="WAIT_MIM" doc="MIM" />;
 
 function PromoSection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; primary: boolean }) {
   const { run, error, busy } = useAct(rtv, onDone);
@@ -64,6 +70,7 @@ function PromoSection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; 
 const SECTIONS: Record<Hold, typeof QtySection> = {
   WAIT_BRAND_QTY: QtySection,
   WAIT_RTV_NOTE: NoteSection,
+  WAIT_MIM: MimSection,
   WAIT_PROMO: PromoSection,
 };
 

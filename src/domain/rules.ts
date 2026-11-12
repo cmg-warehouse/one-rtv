@@ -17,7 +17,7 @@ export const STEP_LABELS: Record<Step, string> = {
 };
 
 export const STEPS: Step[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-export const HOLDS: Hold[] = ['WAIT_BRAND_QTY', 'WAIT_RTV_NOTE', 'WAIT_PROMO'];
+export const HOLDS: Hold[] = ['WAIT_BRAND_QTY', 'WAIT_RTV_NOTE', 'WAIT_MIM', 'WAIT_PROMO'];
 
 /** Documents a Brand may add by hand. */
 export const BRAND_DOC_TYPES: DocType[] = ['MIM', 'SD10', 'RTV_NOTE'];
@@ -51,6 +51,7 @@ export const CN_LABELS: Record<CnType, string> = {
 export const HOLD_LABELS: Record<Hold, string> = {
   WAIT_BRAND_QTY: 'รอ Brand ยืนยันยอด',
   WAIT_RTV_NOTE: 'รอ RTV Note',
+  WAIT_MIM: 'รอเลข MIM',
   WAIT_PROMO: 'รอยืนยัน Promotion',
 };
 
@@ -130,6 +131,8 @@ export function holds(rtv: Rtv): Hold[] {
   if (!rtv.qtyConfirmed && rtv.boxes.some(b => b.countedPcs !== b.expectedPcs)) out.push('WAIT_BRAND_QTY');
   if (isMallGroup(rtv.channel)
     && !rtv.docs.some(d => d.type === 'RTV_NOTE')) out.push('WAIT_RTV_NOTE');
+  if (requiredDocs(cnType(rtv.channel, rtv.saleType)).before.includes('MIM')
+    && !rtv.docs.some(d => d.type === 'MIM')) out.push('WAIT_MIM');
   if (rtv.saleType === 'PROMO' && !rtv.promoConfirmed) out.push('WAIT_PROMO');
   return out;
 }

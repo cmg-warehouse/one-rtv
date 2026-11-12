@@ -1,7 +1,9 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { DEMO_BRAND_ID } from '../data/masters';
+import { getRtv, putRtv, resetData } from '../api';
+import { DEMO_BRAND_ID, STORES } from '../data/masters';
 import { cnType, holds } from '../domain/rules';
+import { rtv as rtvFixture, toStep } from '../domain/testing';
 import { renderAt, seeded } from '../testing';
 
 test('E-tax Consign asks for exactly its CN documents', async () => {
@@ -79,4 +81,36 @@ test('Admin CN list groups open work under the four CN types', async () => {
   for (const name of ['MIM Shop', 'Temp Shop', 'E-tax Consign', 'E-tax Credit']) {
     expect(await screen.findByRole('heading', { name })).toBeInTheDocument();
   }
+});
+
+test('a Shop order opened without MIM waits for it at step 9, Brand adds it, then Admin CN closes', async () => {
+  await resetData();
+  renderAt('/new', 'BRAND');
+  const shop = STORES.find(s => s.channel === 'SHOP')!;
+  await userEvent.selectOptions(await screen.findByLabelText('สาขา'), shop.id);
+  await userEvent.type(screen.getByLabelText('กล่อง 1: จำนวนชิ้นตามเอกสาร'), '10');
+  await userEvent.click(screen.getByRole('button', { name: 'เปิดคำสั่งและออกเลข RTV' }));
+  const heading = await screen.findByRole('heading', { name: /^RTV-CMG-\d{4}-\d{5}$/ });
+  const created = (await getRtv(heading.textContent!))!;
+  await putRtv(toStep(created, 9));
+
+  expect(within(await screen.findByRole('status')).getByText('รอเลข MIM')).toBeInTheDocument();
+  expect(screen.getByText(/ค้างที่: Brand/)).toBeInTheDocument();
+  await userEvent.type(await screen.findByLabelText('MIM'), '26009911');
+  await userEvent.click(screen.getByRole('button', { name: 'บันทึกเลข' }));
+
+  await userEvent.selectOptions(screen.getByLabelText('บทบาท'), 'ADMIN_CN');
+  await userEvent.type(await screen.findByLabelText('Matdoc'), '5250000001');
+  await userEvent.click(screen.getByRole('button', { name: 'ออก CN และปิดงาน' }));
+  expect(await screen.findByText('ปิดงานแล้ว')).toBeInTheDocument();
+});
+
+test('Admin CN sees the CN button disabled with the missing document named while MIM is absent', async () => {
+  await resetData();
+  const shopNoMim = toStep(rtvFixture({ id: 'RTV-CMG-2611-90001', channel: 'SHOP', carrier: 'CG_NETWORK', boxes: [{ no: 'RTV-CMG-2611-90001-B01', expectedPcs: 10 }] }), 9);
+  await putRtv(shopNoMim);
+  renderAt(`/rtv/${shopNoMim.id}`, 'ADMIN_CN');
+  expect(await screen.findByRole('button', { name: 'ออก CN และปิดงาน' })).toBeDisabled();
+  expect(screen.getByText('ขาด MIM')).toBeInTheDocument();
+  expect(screen.getByText('ยังออก CN ไม่ได้: รอเลข MIM')).toBeInTheDocument();
 });

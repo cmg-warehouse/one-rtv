@@ -10,6 +10,8 @@ export default function IssueCnForm({ rtv, onDone }: { rtv: Rtv; onDone: () => v
   const [values, setValues] = useState<Partial<Record<DocType, string>>>({});
   const { run, error, busy } = useAct(rtv, onDone);
   const active = holds(rtv);
+  const missing = req.before.filter(t => !rtv.docs.some(d => d.type === t));
+  const blocked = active.length > 0 || missing.length > 0;
   return (
     <div className="card">
       <h2>ออก CN — {CN_LABELS[cn]}</h2>
@@ -29,8 +31,9 @@ export default function IssueCnForm({ rtv, onDone }: { rtv: Rtv; onDone: () => v
         ))}
       </div>
       {active.length > 0 && <p className="warn">{`ยังออก CN ไม่ได้: ${active.map(h => HOLD_LABELS[h]).join(', ')}`}</p>}
+      {missing.length > 0 && <p className="warn">{missing.map(t => `ขาด ${DOC_LABELS[t]}`).join(', ')}</p>}
       <ErrorLine message={error} />
-      <button type="button" className="btn btn-primary" data-tour="primary" disabled={busy || active.length > 0}
+      <button type="button" className="btn btn-primary" data-tour="primary" disabled={busy || blocked}
         onClick={() => { void run({ type: 'advance', payload: { step: 10, docs: values } }); }}>ออก CN และปิดงาน</button>
     </div>
   );

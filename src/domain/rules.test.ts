@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import type { Carrier, Channel, SaleType } from './types';
 import {
   allowedCarriers, canAct, canSeeCnForm, cnType, holds, isClosed, matchesIdentity, nextStep, owner, requiredDocs, stepsFor,
-  STEP_LABELS, type Identity,
+  STEP_LABELS, HOLD_LABELS, type Identity,
 } from './rules';
 import { rtv } from './testing';
 
@@ -68,7 +68,8 @@ describe('holds clear', () => {
     expect(holds({ ...base, promoConfirmed: true })).toEqual(['WAIT_BRAND_QTY', 'WAIT_RTV_NOTE']);
   });
   test('matching count, SHOP normal has no holds; owner is the next role', () => {
-    const r = rtv({ carrier: 'CG_NETWORK', step: 9, boxes: [{ no: 'x-B01', expectedPcs: 10, countedPcs: 10 }] });
+    const r = rtv({ carrier: 'CG_NETWORK', step: 9, docs: [{ type: 'MIM', value: '26000111' }],
+      boxes: [{ no: 'x-B01', expectedPcs: 10, countedPcs: 10 }] });
     expect(holds(r)).toEqual([]);
     expect(owner(r)).toBe('ADMIN_CN');
   });
@@ -119,5 +120,27 @@ describe('identity scoping', () => {
     expect(canSeeCnForm(onHold, 'BRAND')).toBe(false);
     expect(canSeeCnForm({ ...onHold, step: 8 }, 'ADMIN_CN')).toBe(false);
     expect(canSeeCnForm({ ...onHold, docs: [{ type: 'RTV_NOTE', value: 'n' }] }, 'ADMIN_CN')).toBe(false);
+  });
+});
+
+describe('WAIT_MIM', () => {
+  const counted = [{ no: 'x-B01', expectedPcs: 10, countedPcs: 10 }];
+  const shopNoMim = rtv({ channel: 'SHOP', carrier: 'CG_NETWORK', step: 9, boxes: counted });
+
+  test('a Shop / Temp shop order at step 9 without MIM waits for it, owned by Brand', () => {
+    expect(holds(shopNoMim)).toEqual(['WAIT_MIM']);
+    expect(owner(shopNoMim)).toBe('BRAND');
+    expect(holds({ ...shopNoMim, channel: 'TEMP_SHOP', saleType: 'PROMO' })).toEqual(['WAIT_MIM', 'WAIT_PROMO']);
+    expect(holds({ ...shopNoMim, docs: [{ type: 'MIM', value: '26000111' }] })).toEqual([]);
+  });
+  test('not before step 9, and never for the mall group (their CN needs RTV Note, not MIM)', () => {
+    expect(holds({ ...shopNoMim, step: 8 })).toEqual([]);
+    expect(holds({ ...shopNoMim, channel: 'CONSIGN' })).toEqual(['WAIT_RTV_NOTE']);
+  });
+  test('hold order is qty, note, MIM, promo', () => {
+    const r = rtv({ channel: 'SHOP', saleType: 'PROMO', carrier: 'CG_NETWORK', step: 9,
+      boxes: [{ no: 'x-B01', expectedPcs: 10, countedPcs: 8 }] });
+    expect(holds(r)).toEqual(['WAIT_BRAND_QTY', 'WAIT_MIM', 'WAIT_PROMO']);
+    expect(HOLD_LABELS.WAIT_MIM).toBe('รอเลข MIM');
   });
 });

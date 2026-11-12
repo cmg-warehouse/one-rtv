@@ -5,6 +5,7 @@ import {
 } from './machine';
 import type { Ctx, StepPayload } from './machine';
 import { consignInput, toStep } from './testing';
+import { holds } from './rules';
 import type { Role } from './types';
 
 const at = '2026-11-12T03:00:00Z';
@@ -167,4 +168,27 @@ test('step 2 without a carrier is refused with a Thai message', () => {
 test('step 10 refused during holds names each active hold', () => {
   const r = toStep(createRtv({ ...consignInput, storeId: 'S1' }, 7, as('BRAND')), 9);
   expect(() => advance(r, { step: 10, docs: {} }, as('ADMIN_CN'))).toThrow('ยังออก CN ไม่ได้: รอ RTV Note');
+});
+
+describe('WAIT_MIM', () => {
+  const noMim = () => toStep(createRtv({ brandId: 'B1', storeId: 'S1', channel: 'SHOP', saleType: 'NORMAL',
+    boxPcs: [10], docs: [] }, 7, as('BRAND')), 9);
+
+  test('a Shop order without MIM reaches step 9 on hold; Admin CN is refused naming the hold', () => {
+    const r = noMim();
+    expect(holds(r)).toEqual(['WAIT_MIM']);
+    expect(() => advance(r, { step: 10, docs: { MATDOC: '525' } }, as('ADMIN_CN'))).toThrow(/รอเลข MIM/);
+  });
+  test('Brand adding the MIM releases it and CN can be issued', () => {
+    const r = addDoc(noMim(), { type: 'MIM', value: '26000777' }, as('BRAND'));
+    expect(holds(r)).toEqual([]);
+    expect(advance(r, { step: 10, docs: { MATDOC: '525' } }, as('ADMIN_CN')).step).toBe(10);
+  });
+  test('the missing-before-docs guard still names the document when no hold covers it', () => {
+    const r = { ...noMim(), step: 9 as const, docs: [{ type: 'TK' as const, value: 'TK1' }] };
+    // WAIT_MIM is a hold, so the hold message wins; the guard covers anything else missing
+    const withMim = addDoc(r, { type: 'MIM', value: '1' }, as('BRAND'));
+    expect(() => advance({ ...withMim, docs: withMim.docs.filter(d => d.type !== 'TK') }, { step: 10, docs: { MATDOC: '1' } }, as('ADMIN_CN')))
+      .toThrow(/เอกสารยังไม่ครบ: TK/);
+  });
 });

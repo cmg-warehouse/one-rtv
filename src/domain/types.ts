@@ -6,7 +6,7 @@ export type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 export type CnType = 'MIM_SHOP' | 'TEMP_SHOP' | 'ETAX_CONSIGN' | 'ETAX_CREDIT';
 export type DocType = 'MIM' | 'RTV_NOTE' | 'SD10' | 'PICKUP_SLIP' | 'CARRIER_REF' | 'TK'
   | 'MATDOC' | 'GEN104' | 'PROMO_NO' | 'SALE_RETURN' | 'DELIVERY' | 'INVOICE_REF' | 'CN';
-export type Hold = 'WAIT_BRAND_QTY' | 'WAIT_RTV_NOTE' | 'WAIT_PROMO';
+export type Hold = 'WAIT_BRAND_QTY' | 'WAIT_RTV_NOTE' | 'WAIT_MIM' | 'WAIT_PROMO';
 export type EventKind = 'STEP' | 'PICKUP_FAILED' | 'SHORT_BOX' | 'FLAG_CLEARED' | 'QTY_MISMATCH'
   | 'BRAND_CONFIRMED' | 'RECOUNT_REQUESTED' | 'DOC_ADDED' | 'PROMO_CONFIRMED' | 'CANCELLED';
 export interface Box { no: string; expectedPcs: number; countedPcs?: number }

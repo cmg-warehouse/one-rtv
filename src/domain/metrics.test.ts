@@ -1,4 +1,5 @@
 import { buildSeed } from '../data/seed';
+import { rtv, toStep } from './testing';
 import { computeMetrics } from './metrics';
 
 const now = '2026-11-12T03:00:00Z';
@@ -26,4 +27,12 @@ test('owners are sorted by count and holds are counted', () => {
   expect(counts).toEqual([...counts].sort((a, b) => b - a));
   expect(Object.values(m.byHold).reduce((a, h) => a + h.count, 0)).toBeGreaterThan(0);
   expect(m.byHold.WAIT_RTV_NOTE.avgWaitDays).toBeGreaterThanOrEqual(0);
+});
+
+test('an RTV waiting for its MIM is counted under WAIT_MIM and owned by Brand', () => {
+  const stuck = toStep(rtv({ id: 'RTV-T-1', channel: 'SHOP', carrier: 'CG_NETWORK', boxes: [{ no: 'b', expectedPcs: 4 }] }), 9);
+  const m = computeMetrics([stuck], now);
+  expect(m.byHold.WAIT_MIM.count).toBe(1);
+  expect(m.byHold.WAIT_RTV_NOTE.count).toBe(0);
+  expect(m.byOwner).toEqual([expect.objectContaining({ role: 'BRAND', count: 1 })]);
 });
