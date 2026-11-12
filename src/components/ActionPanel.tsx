@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
-import { isClosed, nextStep, owner } from '../domain/rules';
+import { DEMO_BRAND_ID } from '../data/masters';
+import { holds, isClosed, nextStep, owner } from '../domain/rules';
 import type { Rtv } from '../domain/types';
 import { useSession } from '../state/session';
 import AssignCarrierForm from './actions/AssignCarrierForm';
+import BrandHoldActions from './actions/BrandHoldActions';
+import IssueCnForm from './actions/IssueCnForm';
 import IssueSlipAction from './actions/IssueSlipAction';
 import PickupForms from './actions/PickupForms';
 import ScdcForms from './actions/ScdcForms';
@@ -21,7 +24,8 @@ function PrimaryForm({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
     case 7: return <ScdcForms rtv={rtv} step={step} onDone={onDone} />;
     case 8: return <WarehouseReceiveForm rtv={rtv} onDone={onDone} />;
     case 9: return <WarehouseCountForm rtv={rtv} onDone={onDone} />;
-    default: return null; // step 10 (Admin CN) and Brand hold actions: Task 8
+    case 10: return <IssueCnForm rtv={rtv} onDone={onDone} />;
+    default: return null;
   }
 }
 
@@ -30,10 +34,15 @@ export default function ActionPanel({ rtv, onDone }: { rtv: Rtv; onDone: () => v
   const { role } = useSession();
   if (rtv.cancelled || isClosed(rtv)) return null;
   const mine = owner(rtv) === role;
+  // While holds are active owner() is BRAND, but Admin CN still sees the (disabled) CN form.
+  const cnBlocked = role === 'ADMIN_CN' && rtv.step === 9 && !mine;
+  const brandHolds = role === 'BRAND' && rtv.brandId === DEMO_BRAND_ID && holds(rtv).length > 0;
   const hasSlip = role === 'CS' && rtv.docs.some(d => d.type === 'PICKUP_SLIP');
   return (
     <>
-      {mine && <PrimaryForm rtv={rtv} onDone={onDone} />}
+      {brandHolds ? <BrandHoldActions rtv={rtv} onDone={onDone} />
+        : cnBlocked ? <IssueCnForm rtv={rtv} onDone={onDone} />
+        : mine && <PrimaryForm rtv={rtv} onDone={onDone} />}
       {hasSlip && <p><Link to={`/slip/${rtv.id}`}>พิมพ์ใบแจ้งเก็บ</Link></p>}
       <SecondaryActions rtv={rtv} role={role} onDone={onDone} />
     </>

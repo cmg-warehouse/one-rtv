@@ -1,4 +1,4 @@
-import { allowedCarriers, cnType, holds, isClosed, nextStep, requiredDocs, stepsFor, DOC_LABELS } from './rules';
+import { allowedCarriers, cnType, holds, HOLD_LABELS, isClosed, nextStep, requiredDocs, stepsFor, DOC_LABELS } from './rules';
 import type { Box, Carrier, Channel, DocRef, DocType, EventKind, Role, Rtv, RtvEvent, SaleType } from './types';
 
 export class FlowError extends Error {
@@ -148,7 +148,7 @@ export function advance(rtv: Rtv, payload: StepPayload, ctx: Ctx): Rtv {
     }
     case 10: {
       const open = holds(rtv);
-      if (open.length > 0) throw new FlowError('ยังมีรายการที่รอดำเนินการ จึงออก CN ไม่ได้');
+      if (open.length > 0) throw new FlowError(`ยังออก CN ไม่ได้: ${open.map(h => HOLD_LABELS[h]).join(', ')}`);
       const req = requiredDocs(cnType(rtv.channel, rtv.saleType));
       const missingBefore = req.before.filter(t => !rtv.docs.some(d => d.type === t));
       if (missingBefore.length > 0) {

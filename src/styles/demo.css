@@ -58,3 +58,6 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
 .carrier-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
 .carrier-toggle .btn { flex: 1; min-height: 48px; }
 .short-preview { font-weight: 600; }
+.hold-row { flex-basis: 100%; }
+.doc-checklist { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.doc-checklist .ok { color: var(--status-done, #15803D); font-weight: 600; }

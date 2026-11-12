@@ -163,3 +163,8 @@ describe('purity', () => {
 test('step 2 without a carrier is refused with a Thai message', () => {
   expect(() => advance(shop(), { step: 2, pickupDate: '2026-11-13' } as unknown as StepPayload, as('CS'))).toThrow('ขนส่ง');
 });
+
+test('step 10 refused during holds names each active hold', () => {
+  const r = toStep(createRtv({ ...consignInput, storeId: 'S1' }, 7, as('BRAND')), 9);
+  expect(() => advance(r, { step: 10, docs: {} }, as('ADMIN_CN'))).toThrow('ยังออก CN ไม่ได้: รอ RTV Note');
+});

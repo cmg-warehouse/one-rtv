@@ -27,6 +27,7 @@ export default function RtvDetail() {
   }
   const own = owner(rtv);
   const ownerText = rtv.cancelled ? 'ยกเลิกแล้ว' : isClosed(rtv) ? 'ปิดงานแล้ว' : own ? `ค้างที่: ${ROLE_LABELS[own]}` : '—';
+  const cnNo = rtv.docs.find(d => d.type === 'CN')?.value;
   const brand = BRANDS.find(b => b.id === rtv.brandId)?.name ?? rtv.brandId;
   const store = STORES.find(s => s.id === rtv.storeId)?.name ?? rtv.storeId;
   const page = (
@@ -44,6 +45,7 @@ export default function RtvDetail() {
           {brand} · {store} · ขนส่ง: {rtv.carrier ? CARRIER_LABELS[rtv.carrier] : '—'}
           {rtv.pickupDate ? ` · นัดรับ ${fmtDate(rtv.pickupDate)}` : ''} · เปิดเมื่อ {fmtDate(rtv.createdAt)}
         </p>
+        {isClosed(rtv) && cnNo && <p>เลข CN: {cnNo}</p>}
         {rtv.cancelled && <p className="error">ยกเลิก: {rtv.cancelled.reason}</p>}
       </div>
       <HoldBanner rtv={rtv} />

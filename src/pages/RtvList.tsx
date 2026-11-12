@@ -3,8 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { searchByAnyNumber } from '../api';
 import { BRANDS, DEMO_BRAND_ID, STORES } from '../data/masters';
 import { daysBetween } from '../domain/format';
-import { CHANNEL_LABELS, STEP_LABELS, isClosed, owner } from '../domain/rules';
-import type { Channel, Rtv, Step } from '../domain/types';
+import { CHANNEL_LABELS, CN_LABELS, STEP_LABELS, cnType, isClosed, owner } from '../domain/rules';
+import type { Channel, CnType, Rtv, Step } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
 import { useRtvList } from '../state/useRtvs';
 
@@ -41,6 +41,34 @@ export default function RtvList() {
     return true;
   });
   const now = new Date().toISOString();
+  const grouped = role === 'ADMIN_CN' && mine;
+
+  const renderTable = (list: Rtv[]) => (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr><th>เลข RTV</th><th>แบรนด์</th><th>สาขา</th><th>ช่องทาง</th><th>สถานะ</th><th>ค้างที่</th><th className="num">อายุงาน (วัน)</th></tr>
+        </thead>
+        <tbody>
+          {list.map(r => {
+            const own = owner(r);
+            const end = isClosed(r) ? r.events[r.events.length - 1]?.at ?? now : now;
+            return (
+              <tr key={r.id} data-testid="rtv-row">
+                <td><Link className="mono" to={`/rtv/${r.id}`}>{r.id}</Link></td>
+                <td>{BRANDS.find(b => b.id === r.brandId)?.name}</td>
+                <td>{STORES.find(s => s.id === r.storeId)?.name}</td>
+                <td>{CHANNEL_LABELS[r.channel]}</td>
+                <td>{r.cancelled ? 'ยกเลิก' : `${r.step}. ${STEP_LABELS[r.step]}`}</td>
+                <td data-testid="owner">{own ? ROLE_LABELS[own] : '—'}</td>
+                <td className="num">{daysBetween(r.createdAt, end)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 
   return (
     <div>
@@ -73,30 +101,17 @@ export default function RtvList() {
       {rows.length === 0 ? (
         <div className="card empty">{mine ? 'ไม่มีงานที่ค้างอยู่กับบทบาทนี้' : 'ไม่พบรายการ'}</div>
       ) : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr><th>เลข RTV</th><th>แบรนด์</th><th>สาขา</th><th>ช่องทาง</th><th>สถานะ</th><th>ค้างที่</th><th className="num">อายุงาน (วัน)</th></tr>
-            </thead>
-            <tbody>
-              {rows.map(r => {
-                const own = owner(r);
-                const end = isClosed(r) ? r.events[r.events.length - 1]?.at ?? now : now;
-                return (
-                  <tr key={r.id} data-testid="rtv-row">
-                    <td><Link className="mono" to={`/rtv/${r.id}`}>{r.id}</Link></td>
-                    <td>{BRANDS.find(b => b.id === r.brandId)?.name}</td>
-                    <td>{STORES.find(s => s.id === r.storeId)?.name}</td>
-                    <td>{CHANNEL_LABELS[r.channel]}</td>
-                    <td>{r.cancelled ? 'ยกเลิก' : `${r.step}. ${STEP_LABELS[r.step]}`}</td>
-                    <td data-testid="owner">{own ? ROLE_LABELS[own] : '—'}</td>
-                    <td className="num">{daysBetween(r.createdAt, end)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        grouped ? (
+          (Object.keys(CN_LABELS) as CnType[]).map(t => {
+            const group = rows.filter(r => cnType(r.channel, r.saleType) === t);
+            return (
+              <section key={t}>
+                <h2>{CN_LABELS[t]}</h2>
+                {group.length === 0 ? <p className="muted">ไม่มีงาน</p> : renderTable(group)}
+              </section>
+            );
+          })
+        ) : renderTable(rows)
       )}
     </div>
   );
