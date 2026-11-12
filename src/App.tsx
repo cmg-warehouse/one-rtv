@@ -1,4 +1,4 @@
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes, useParams } from 'react-router-dom';
 import { SessionProvider } from './state/session';
 import TopBar from './components/TopBar';
 import RtvDetail from './pages/RtvDetail';
@@ -12,6 +12,11 @@ import FlowDetail from './pages/FlowDetail';
 import Dashboard from './pages/Dashboard';
 import TourOverlay from './components/TourOverlay';
 
+/** React Router reuses a page when only `:id` changes; keying by id gives every RTV fresh form state. */
+function RtvDetailRoute() {
+  const { id = '' } = useParams();
+  return <RtvDetail key={id} />;
+}
 
 export function AppShell() {
   return (
@@ -20,7 +25,7 @@ export function AppShell() {
       <main className="container">
         <Routes>
           <Route path="/" element={<RtvList />} />
-          <Route path="/rtv/:id" element={<RtvDetail />} />
+          <Route path="/rtv/:id" element={<RtvDetailRoute />} />
           <Route path="/carrier" element={<CarrierJobs />} />
           <Route path="/tour" element={<Tour />} />
           <Route path="/new" element={<NewRtv />} />

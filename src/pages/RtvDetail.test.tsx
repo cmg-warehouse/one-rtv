@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { listRtvs, resetData } from '../api';
 import { renderAt, seeded } from '../testing';
 
 test('detail shows the One RTV number, 10 steps and the mall label', async () => {
@@ -47,4 +48,21 @@ test('top-bar search with no match shows an inline message', async () => {
   renderAt('/');
   await userEvent.type(screen.getByPlaceholderText('ค้นหาเลข RTV / MIM / TK / CN'), 'ไม่มีเลขนี้99{Enter}');
   expect(await screen.findByText('ไม่พบเลขนี้')).toBeInTheDocument();
+});
+test('navigating between two RTVs resets the forms to the new RTV', async () => {
+  await resetData();
+  const step8 = (await listRtvs()).filter(r => r.step === 8 && !r.cancelled);
+  const a = step8[0];
+  const b = step8.find(r => r.boxes.length !== a.boxes.length)!;
+  expect(b).toBeDefined();
+  renderAt(`/rtv/${a.id}`, 'WH');
+  await userEvent.type(await screen.findByLabelText('เลข TK'), 'TK-OLD');
+  const countA = (await screen.findAllByTestId('count-row')).length;
+  expect(countA).toBe(a.boxes.length);
+  await userEvent.type(screen.getByPlaceholderText('ค้นหาเลข RTV / MIM / TK / CN'), `${b.id}{Enter}`);
+  expect(await screen.findByRole('heading', { name: b.id })).toBeInTheDocument();
+  expect(screen.getByLabelText('เลข TK')).toHaveValue('');
+  const rows = screen.getAllByTestId('count-row');
+  expect(rows).toHaveLength(b.boxes.length);
+  rows.forEach(row => expect(within(row).getByRole('spinbutton')).toHaveValue(null));
 });
