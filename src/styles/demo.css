@@ -48,9 +48,10 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
   .slip { border: 0; padding: 0; max-width: none; }
   @page { size: A4; margin: 15mm; }
 }
-.phone-frame { width: 390px; max-width: 100%; margin: 0 auto; border: 8px solid #1A1A1A; border-radius: 32px; background: var(--color-bg); overflow: hidden; }
+.phone-frame { width: 390px; max-width: 100%; height: min(780px, calc(100dvh - 140px)); margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; border: 8px solid #1A1A1A; border-radius: 32px; background: var(--color-bg); }
+.phone-frame-body { flex: 1; overflow-y: auto; }
 .phone-frame .mobile { padding-bottom: 16px; }
-.phone-frame .bottom-bar { position: sticky; bottom: 0; left: auto; right: auto; margin: 0 -16px -16px; }
+.phone-frame-footer .bottom-bar { position: static; }
 .phone-frame .rtv-id { font-size: 24px; }
 .phone-frame .status-bar { grid-template-columns: repeat(2, 1fr); }
 .phone-frame .timeline li { grid-template-columns: 1fr; gap: 0; }
