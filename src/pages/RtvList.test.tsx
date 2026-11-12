@@ -4,8 +4,10 @@ import { renderAt, seeded } from '../testing';
 
 test('"ค้างที่ฉัน" narrows the list to the current role', async () => {
   renderAt('/', 'ADMIN_CN');
-  await userEvent.click(await screen.findByLabelText('ค้างที่ฉัน'));
-  const rows = screen.getAllByTestId('rtv-row');
+  await screen.findAllByTestId('rtv-row');
+  await userEvent.click(screen.getByLabelText('ค้างที่ฉัน'));
+  const rows = await screen.findAllByTestId('rtv-row');
+  expect(rows.length).toBeGreaterThan(0);
   rows.forEach(row => expect(within(row).getByTestId('owner')).toHaveTextContent('Admin CN'));
 });
 test('viewer owns nothing', async () => {
