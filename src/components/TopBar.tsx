@@ -1,4 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { useState, type KeyboardEvent } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { searchByAnyNumber } from '../api';
 import type { Role } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
 
@@ -11,6 +13,19 @@ const NAV = [
 
 export default function TopBar() {
   const { role, setRole } = useSession();
+  const navigate = useNavigate();
+  const [q, setQ] = useState('');
+  const [notFound, setNotFound] = useState(false);
+
+  const onKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    const term = q.trim();
+    if (!term) return;
+    const hits = await searchByAnyNumber(term);
+    if (hits.length === 0) setNotFound(true);
+    else if (hits.length === 1) navigate(`/rtv/${hits[0].id}`);
+    else navigate(`/?q=${encodeURIComponent(term)}`);
+  };
   return (
     <header className="topbar">
       <NavLink to="/" className="topbar-brand">
@@ -18,7 +33,10 @@ export default function TopBar() {
         <strong>One RTV</strong>
       </NavLink>
       <div className="topbar-search">
-        <input type="search" placeholder="ค้นหาเลข RTV / MIM / TK / CN" />
+        <input type="search" placeholder="ค้นหาเลข RTV / MIM / TK / CN" value={q}
+          onChange={(e) => { setQ(e.target.value); setNotFound(false); }}
+          onKeyDown={(e) => { void onKeyDown(e); }} />
+        {notFound && <div className="search-error" role="alert">ไม่พบเลขนี้</div>}
       </div>
       <div className="topbar-user">
         <select aria-label="บทบาท" value={role} onChange={(e) => setRole(e.target.value as Role)}>

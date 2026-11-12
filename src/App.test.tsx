@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
@@ -6,7 +6,7 @@ test('top bar shows CRL logo, search box and all 7 roles', () => {
   render(<App />);
   expect(screen.getByAltText('CRL')).toBeInTheDocument();
   expect(screen.getByPlaceholderText('ค้นหาเลข RTV / MIM / TK / CN')).toBeInTheDocument();
-  expect(screen.getAllByRole('option')).toHaveLength(7);
+  expect(within(screen.getByLabelText('บทบาท')).getAllByRole('option')).toHaveLength(7);
 });
 test('chosen role survives a remount', async () => {
   const { unmount } = render(<App />);
