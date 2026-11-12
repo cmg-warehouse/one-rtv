@@ -13,7 +13,7 @@ npm test         # รัน unit test และ UI test (Vitest)
 npm run build    # สร้างไฟล์ static ในโฟลเดอร์ dist/
 ```
 
-ผล build เป็นไฟล์ static เปิด `dist/index.html` จากโฟลเดอร์ได้โดยตรง หรือวางบน web server ภายใน
+ผล build อยู่ใน `dist/`: `index.html` ไฟล์เดียวที่รวม JS และ CSS ไว้ในตัว (self-contained) บวกไฟล์โลโก้สองไฟล์ `crl-logo.svg` และ `cmg-logo.png` ที่ต้องอยู่โฟลเดอร์เดียวกัน เปิด `dist/index.html` จากโฟลเดอร์ (file://) ได้โดยตรง หรือวางบน web server ภายในก็ได้ ฟอนต์ Kanit / Sarabun โหลดจาก Google Fonts เมื่อมีอินเทอร์เน็ต ถ้าออฟไลน์จะใช้ฟอนต์ของระบบแทน
 
 ## วิธีนำเสนอ
 

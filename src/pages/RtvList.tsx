@@ -16,7 +16,7 @@ export default function RtvList() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q')?.trim() ?? '';
   const ownerParam = params.get('owner') ?? '';
-  const ownerFilter = ownerParam in ROLE_LABELS ? (ownerParam as Role) : null;
+  const ownerFilter = Object.hasOwn(ROLE_LABELS, ownerParam) ? (ownerParam as Role) : null;
   const [matches, setMatches] = useState<Rtv[] | null>(null);
   const [step, setStep] = useState('');
   const [channel, setChannel] = useState('');

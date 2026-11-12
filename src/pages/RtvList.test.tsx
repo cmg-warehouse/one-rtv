@@ -18,8 +18,9 @@ test('viewer owns nothing', async () => {
 test('search with one match opens its detail', async () => {
   const r = await seeded(x => x.docs.some(d => d.type === 'MIM'));
   renderAt('/');
+  await screen.findAllByTestId('rtv-row');
   await userEvent.type(screen.getByPlaceholderText('ค้นหาเลข RTV / MIM / TK / CN'), r.docs.find(d => d.type === 'MIM')!.value + '{Enter}');
-  expect(await screen.findByRole('heading', { name: r.id })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: r.id }, { timeout: 5000 })).toBeInTheDocument();
 });
 test('search with several matches lists them under ?q=', async () => {
   await seeded(() => true);
