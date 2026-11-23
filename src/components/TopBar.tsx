@@ -5,6 +5,7 @@ import type { Role } from '../domain/types';
 import { ROLE_LABELS, useSession } from '../state/session';
 import { clearTour } from '../tour/runner';
 import { LangToggle, tr } from '../i18n';
+import SiteTour, { openSiteTour } from './SiteTour';
 
 const nav = () => [
   { to: '/', label: tr('รายการ RTV', 'RTV list'), end: true },
@@ -44,28 +45,30 @@ export default function TopBar() {
         <img src="./crl-logo.svg" alt="CRL" />
         <strong>One RTV</strong>
       </NavLink>
-      <div className="topbar-search">
+      <div className="topbar-search" data-sitetour="search">
         <input type="search" placeholder={tr('ค้นหาเลข RTV / MIM / TK / CN', 'Search RTV / MIM / TK / CN no.')} value={q}
           onChange={(e) => { setQ(e.target.value); setNotFound(false); }}
           onKeyDown={(e) => { void onKeyDown(e); }} />
         {notFound && <div className="search-error" role="alert">{tr('ไม่พบเลขนี้', 'No match for this number')}</div>}
       </div>
       <div className="topbar-user">
-        <select aria-label={tr('บทบาท', 'Role')} value={role} onChange={(e) => setRole(e.target.value as Role)}>
+        <select data-sitetour="role" aria-label={tr('บทบาท', 'Role')} value={role} onChange={(e) => setRole(e.target.value as Role)}>
           {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
             <option key={r} value={r}>{ROLE_LABELS[r]}</option>
           ))}
         </select>
-        <button type="button" className="btn btn-sm" onClick={() => { void onReset(); }}>{tr('รีเซ็ตข้อมูล', 'Reset data')}</button>
-        <LangToggle />
-        <NavLink to="/login" className="btn btn-sm btn-primary">{tr('ดูแบบระบบจริง', 'Live system preview')}</NavLink>
+        <button type="button" className="btn btn-sm" data-sitetour="reset" onClick={() => { void onReset(); }}>{tr('รีเซ็ตข้อมูล', 'Reset data')}</button>
+        <span data-sitetour="lang"><LangToggle /></span>
+        <button type="button" className="btn btn-sm" onClick={openSiteTour}>{tr('แนะนำเว็บ', 'Site tour')}</button>
+        <NavLink to="/login" className="btn btn-sm btn-primary" data-sitetour="live">{tr('ดูแบบระบบจริง', 'Live system preview')}</NavLink>
       </div>
       <nav>
         {role === 'CARRIER' && <NavLink to="/carrier" className="nav-link">{tr('งานขนส่ง', 'Carrier jobs')}</NavLink>}
         {nav().map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end} className="nav-link">{n.label}</NavLink>
+          <NavLink key={n.to} to={n.to} end={n.end} className="nav-link" data-sitetour={n.to}>{n.label}</NavLink>
         ))}
       </nav>
+      <SiteTour />
     </header>
   );
 }

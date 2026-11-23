@@ -409,3 +409,18 @@ th.num .th-sort { flex-direction: row; }
 }
 @media print { .portal-side, .portal-head { display: none !important; } .portal { display: block; } }
 .portal-home td .mono { white-space: nowrap; }
+
+/* Site tour (spotlight over the top bar) */
+.site-tour { position: fixed; inset: 0; z-index: 1000; }
+.site-tour-backdrop { position: absolute; inset: 0; }
+.site-tour-spot { position: fixed; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(17, 17, 20, .62); outline: 2px solid #fff; pointer-events: none; transition: top .2s, left .2s, width .2s, height .2s; }
+.site-tour-card { position: fixed; background: var(--color-bg); border-radius: var(--radius-sheet); border-top: 4px solid var(--color-brand); padding: 16px 18px 14px; box-shadow: 0 12px 32px rgba(0, 0, 0, .28); transition: top .2s, left .2s; }
+.site-tour-card h2 { font-size: 18px; margin: 0 0 6px; }
+.site-tour-card p { margin: 0 0 12px; }
+.site-tour-count { color: var(--color-muted); font-size: 13px; margin-bottom: 4px !important; }
+.site-tour-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.site-tour-skip { margin-right: auto; }
+.site-tour-dots { display: inline-flex; gap: 4px; margin-right: 4px; }
+.site-tour-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border-strong); }
+.site-tour-dots span.on { background: var(--color-brand); }
+@media (max-width: 600px) { .site-tour-dots { display: none; } }
