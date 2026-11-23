@@ -2,6 +2,7 @@ import { HashRouter, Link, Navigate, Route, Routes, useLocation, useParams } fro
 import { LangProvider, tr } from './i18n';
 import { PortalProvider, usePortal } from './state/portal';
 import PortalShell from './components/PortalShell';
+import PreviewIntro from './components/PreviewIntro';
 import Login from './pages/Login';
 import PortalHome from './pages/PortalHome';
 import { SessionProvider } from './state/session';
@@ -93,6 +94,7 @@ export default function App() {
         <HashRouter>
           <LangProvider>
             <AppShell />
+            <PreviewIntro />
           </LangProvider>
         </HashRouter>
       </PortalProvider>

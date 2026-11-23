@@ -6,6 +6,7 @@ import { ROLE_LABELS, useSession } from '../state/session';
 import { clearTour } from '../tour/runner';
 import { LangToggle, tr } from '../i18n';
 import SiteTour, { openSiteTour } from './SiteTour';
+import { playPreviewIntro } from './PreviewIntro';
 
 const nav = () => [
   { to: '/', label: tr('รายการ RTV', 'RTV list'), end: true },
@@ -60,7 +61,7 @@ export default function TopBar() {
         <button type="button" className="btn btn-sm" data-sitetour="reset" onClick={() => { void onReset(); }}>{tr('รีเซ็ตข้อมูล', 'Reset data')}</button>
         <span data-sitetour="lang"><LangToggle /></span>
         <button type="button" className="btn btn-sm" onClick={openSiteTour}>{tr('แนะนำเว็บ', 'Site tour')}</button>
-        <NavLink to="/login" className="btn btn-sm btn-primary" data-sitetour="live">{tr('ดูแบบระบบจริง', 'Live system preview')}</NavLink>
+        <NavLink to="/login" className="btn btn-sm btn-primary" data-sitetour="live" onClick={playPreviewIntro}>{tr('ดูแบบระบบจริง', 'Live system preview')}</NavLink>
       </div>
       <nav>
         {role === 'CARRIER' && <NavLink to="/carrier" className="nav-link">{tr('งานขนส่ง', 'Carrier jobs')}</NavLink>}

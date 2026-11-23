@@ -432,3 +432,57 @@ th.num .th-sort { flex-direction: row; }
 @keyframes login-hint-bob { 50% { transform: translateY(3px); } }
 @media (prefers-reduced-motion: reduce) { .login-hint > span:first-child { animation: none; } }
 .login-accounts { scroll-margin-top: 16px; }
+
+/* ---------- Live-system preview: logo cut scene ---------- */
+.pi {
+  position: fixed; inset: 0; z-index: 10000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 45%, #ffffff 0%, #f6f4f6 60%, #ece8ec 100%);
+  cursor: pointer; overflow: hidden;
+  animation: pi-in .25s ease-out both, pi-out .55s ease-in 2.45s forwards;
+}
+.pi-stage { position: relative; width: min(78vw, 620px); aspect-ratio: 3 / 2; overflow: hidden; }
+.pi-stage svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.pi-line, .pi-mark, .pi-ghost, .pi-name { transform-box: fill-box; }
+
+.pi-line { animation: pi-streak .5s cubic-bezier(.2,.8,.2,1) both; }
+.pi-line-0 { animation-delay: .25s; }
+.pi-line-1 { animation-delay: .38s; }
+.pi-mark { transform-origin: 60% 50%; animation: pi-slam .6s cubic-bezier(.2,1.25,.35,1) .45s both; }
+.pi-ghost { animation: pi-ghost 1.1s ease-out .9s both; }
+.pi-name { animation: pi-wipe .7s cubic-bezier(.65,0,.35,1) 1.05s both; }
+.pi-shine {
+  position: absolute; top: -10%; bottom: -10%; left: 0; width: 18%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+  transform: skewX(-18deg) translateX(-150%);
+  mix-blend-mode: soft-light;
+  animation: pi-shine .7s ease-in-out 1.7s both;
+}
+.pi-tag {
+  margin: 4px 0 0; font-size: 13px; letter-spacing: .32em; text-transform: uppercase; color: #8a1a22;
+  animation: pi-rise .5s ease-out 1.6s both;
+}
+.pi-skip {
+  position: absolute; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  border: 1px solid #d8d2d8; background: rgba(255,255,255,.8); color: #555;
+  border-radius: 999px; padding: 4px 14px; font-size: 12px; cursor: pointer;
+}
+
+@keyframes pi-in { from { opacity: 0; } }
+@keyframes pi-out { to { opacity: 0; visibility: hidden; } }
+@keyframes pi-streak { from { opacity: 0; transform: translateX(-260px) scaleX(2.2); } 60% { opacity: 1; } }
+@keyframes pi-slam {
+  from { opacity: 0; transform: translate(140px, -90px) skewX(-14deg) scale(1.25); }
+  55% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pi-ghost { from { opacity: 0; transform: translateX(-24px); } }
+@keyframes pi-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes pi-shine { to { transform: skewX(-18deg) translateX(700%); } }
+@keyframes pi-rise { from { opacity: 0; transform: translateY(8px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pi { animation: pi-in .2s ease-out both, pi-out .35s ease-in .85s forwards; }
+  .pi-line, .pi-mark, .pi-ghost, .pi-name, .pi-tag { animation: pi-in .3s ease-out both; }
+  .pi-shine { display: none; }
+}
