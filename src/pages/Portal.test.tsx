@@ -49,3 +49,9 @@ test('the EN | TH switch changes the language and remembers it', async () => {
   expect(await screen.findByRole('heading', { name: 'เข้าสู่ระบบ' })).toBeInTheDocument();
   setLang('th');
 });
+
+test('the sign-in card points to the demo accounts below', async () => {
+  render(<App />);
+  await userEvent.click(await screen.findByRole('button', { name: /ทดลองใช้: ไม่ต้องพิมพ์อะไร/ }));
+  expect(screen.getByRole('button', { name: /คุณพลอย/ })).toHaveFocus();
+});

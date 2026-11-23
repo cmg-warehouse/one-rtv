@@ -13,6 +13,12 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const toAccounts = () => {
+    const el = document.getElementById('demo-accounts');
+    if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el?.querySelector<HTMLButtonElement>('.login-account')?.focus({ preventScroll: true });
+  };
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const a = list.find(x => x.email.toLowerCase() === email.trim().toLowerCase());
@@ -36,6 +42,13 @@ export default function Login() {
         </div>
         <h1>{tr('เข้าสู่ระบบ', 'Sign in')}</h1>
         <p className="muted">{tr('ระบบติดตามสินค้าคืนผู้ขาย (RTV) ของ Central Retail Logistics', 'Return-to-vendor tracking for Central Retail Logistics')}</p>
+        <button type="button" className="login-hint" onClick={toAccounts}>
+          <span aria-hidden="true">👇</span>
+          <span>
+            <strong>{tr('ทดลองใช้: ไม่ต้องพิมพ์อะไร', 'Trying it out? No need to type')}</strong>
+            {tr('กดเลือก "บัญชีตัวอย่าง" ด้านล่าง เพื่อเข้าเป็น Brand, CS, ขนส่ง, คลัง ฯลฯ ได้ทันที', 'Pick one of the demo accounts below to sign in as a Brand, CS, carrier, warehouse and more.')}
+          </span>
+        </button>
         <form onSubmit={submit} className="login-form">
           <label>
             {tr('อีเมล', 'Email')}
@@ -53,7 +66,7 @@ export default function Login() {
         </form>
       </div>
 
-      <section className="login-accounts" aria-label={tr('บัญชีตัวอย่าง', 'Demo accounts')}>
+      <section id="demo-accounts" className="login-accounts" aria-label={tr('บัญชีตัวอย่าง', 'Demo accounts')}>
         <h2>{tr('บัญชีตัวอย่าง', 'Demo accounts')}</h2>
         <p className="muted">{tr('กดเพื่อเข้าสู่ระบบเป็นบุคคลนั้น แต่ละบทบาทจะเห็นเมนูและงานของตัวเองเท่านั้น', 'Pick one to sign in as that person. Each role sees only its own menu and work.')}</p>
         <ul>

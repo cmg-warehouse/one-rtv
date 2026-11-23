@@ -424,3 +424,11 @@ th.num .th-sort { flex-direction: row; }
 .site-tour-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border-strong); }
 .site-tour-dots span.on { background: var(--color-brand); }
 @media (max-width: 600px) { .site-tour-dots { display: none; } }
+
+.login-hint { width: 100%; display: flex; gap: 10px; align-items: flex-start; text-align: left; margin-top: 14px; padding: 10px 12px; background: #fff7e6; border: 1px solid #f5c26b; border-radius: var(--radius-card); font: inherit; color: inherit; cursor: pointer; }
+.login-hint:hover { border-color: var(--color-brand); }
+.login-hint > span:first-child { font-size: 20px; line-height: 1.2; animation: login-hint-bob 1.4s ease-in-out infinite; }
+.login-hint > span:last-child { display: grid; gap: 2px; font-size: 14px; }
+@keyframes login-hint-bob { 50% { transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .login-hint > span:first-child { animation: none; } }
+.login-accounts { scroll-margin-top: 16px; }
