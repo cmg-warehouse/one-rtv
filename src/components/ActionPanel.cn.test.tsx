@@ -53,7 +53,7 @@ test('closing with a CN document shows its number', async () => {
 });
 
 test('Brand can ask for a recount', async () => {
-  const r = await seeded(x => holds(x).includes('WAIT_BRAND_QTY'));
+  const r = await seeded(x => holds(x).includes('WAIT_BRAND_QTY') && x.brandId === DEMO_BRAND_ID && !x.promoId);
   renderAt(`/rtv/${r.id}`, 'BRAND');
   expect(await screen.findByRole('columnheader', { name: 'คลังนับได้' })).toBeInTheDocument();
   await userEvent.click(await screen.findByRole('button', { name: 'ขอให้นับใหม่' }));
@@ -96,8 +96,9 @@ test('a Shop order opened without MIM waits for it at step 9, Brand adds it, the
 
   expect(within(await screen.findByRole('status')).getByText('รอเลข MIM')).toBeInTheDocument();
   expect(screen.getByText(/ค้างที่: Brand/)).toBeInTheDocument();
-  await userEvent.type(await screen.findByLabelText('MIM'), '26009911');
-  await userEvent.click(screen.getByRole('button', { name: 'บันทึกเลข' }));
+  await userEvent.type(await screen.findByLabelText('MIM กล่อง B01'), '26009911');
+  await userEvent.click(screen.getByRole('button', { name: 'บันทึกเลข MIM' }));
+  expect((await getRtv(created.id))?.boxes[0].mim).toBe('26009911');
 
   await userEvent.selectOptions(screen.getByLabelText('บทบาท'), 'ADMIN_CN');
   await userEvent.type(await screen.findByLabelText('Matdoc'), '5250000001');

@@ -48,3 +48,17 @@ test('each role lane row carries its lane class', () => {
     expect(container.querySelector(`.flow-row.lane-${r}`)).not.toBeNull();
   }
 });
+test('promotion pickup flow: the coordinator lane opens it, the combined slip is automatic, SCDC depends on the brand', async () => {
+  const { container } = renderAt('/flow?s=PROMO:SCDC');
+  expect(container.querySelector('.flow-row.lane-PROMO')).not.toBeNull();
+  expect(screen.getByText('แจ้งงานเก็บโปร')).toBeInTheDocument();
+  expect(screen.getByText('ออกใบแจ้งเก็บรวม')).toBeInTheDocument();
+  expect(screen.getByText('หน้างานโปร → SCDC คลองส่งน้ำ → CMG กม.20')).toBeInTheDocument();
+  await userEvent.selectOptions(screen.getByLabelText('ประเภทการคืน'), 'PROMO:CMG');
+  expect(screen.getByText('หน้างานโปร → CMG กม.20')).toBeInTheDocument();
+  expect(screen.getAllByTestId('flow-cell').filter(c => c.classList.contains('is-skipped'))).toHaveLength(2);
+});
+test('the coordinator lane is hidden for ordinary returns', () => {
+  const { container } = renderAt('/flow?s=SHOP:PLAZA_4W');
+  expect(container.querySelector('.flow-row.lane-PROMO')).toBeNull();
+});

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CHANGED_EVENT, getRtv } from '../api';
-import type { Rtv } from '../domain/types';
+import { tr } from '../i18n';
 import { ROLE_LABELS, asCarrierActor, useSession } from '../state/session';
-import { back, isFinished, loadTour, next, saveTour, startStory, storyOf, TOUR_EVENT, type TourState } from '../tour/runner';
+import {
+  back, idsOf, isFinished, loadTour, next, saveTour, startStory, storyOf, takeSnapshot, TOUR_EVENT, type Snapshot, type TourState,
+} from '../tour/runner';
 
 /** Pulsing outline on the first primary action of the page (it may sit in the phone frame's footer). */
 function useHighlight(active: boolean, key: string): void {
@@ -38,7 +40,7 @@ export default function TourOverlay() {
   const [error, setError] = useState<string | null>(null);
   const tourRef = useRef(tour);
   const busyRef = useRef(false);
-  const baseline = useRef<Rtv | null>(null);
+  const baseline = useRef<Snapshot | null>(null);
   tourRef.current = tour;
 
   useEffect(() => {
@@ -67,12 +69,13 @@ export default function TourOverlay() {
     if (!tour || !story) return;
     const stepDef = story.steps[tour.index];
     setRole(stepDef ? stepDef.role : 'VIEWER');
-    navigate(stepDef ? stepDef.route(tour.rtvId) : `/rtv/${tour.rtvId}`);
+    navigate(stepDef ? stepDef.route(idsOf(tour)) : `/rtv/${tour.rtvId}`);
     let live = true;
+    void takeSnapshot(tour).then(snap => { if (live) baseline.current = snap; }).catch(() => undefined);
     void getRtv(tour.rtvId).then(r => {
       if (!live || !r) return;
-      baseline.current = r;
-      const actor = stepDef?.role === 'CARRIER' ? asCarrierActor(r.carrier) : null;
+      // A promotion pickup is a booked truck even before CS has set the carrier.
+      const actor = stepDef?.role === 'CARRIER' ? asCarrierActor(r.carrier ?? (tour.promoId ? 'AGREED' : null)) : null;
       if (actor) setCarrierActor(actor);
     });
     return () => { live = false; };
@@ -86,8 +89,8 @@ export default function TourOverlay() {
       const s = tourRef.current;
       if (busyRef.current || !s || isFinished(s)) return;
       const id = (e as CustomEvent<string | undefined>).detail;
-      if (id && id !== s.rtvId) return;
-      void getRtv(s.rtvId).then(now => {
+      if (id && id !== s.rtvId && id !== s.promoId) return;
+      void takeSnapshot(s).catch(() => null).then(now => {
         const before = baseline.current;
         const cur = tourRef.current;
         if (!now || !before || !cur || cur.index !== s.index || busyRef.current) return;
@@ -109,7 +112,7 @@ export default function TourOverlay() {
     try {
       commit(await fn());
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'เกิดข้อผิดพลาด');
+      setError(e instanceof Error ? e.message : tr('เกิดข้อผิดพลาด', 'Something went wrong'));
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -119,24 +122,29 @@ export default function TourOverlay() {
   const current = tour;
   const stepDef = story.steps[current.index];
   return (
-    <aside className="tour-overlay" aria-label="Demo นำชม">
+    <aside className="tour-overlay" aria-label={tr('Demo นำชม', 'Guided demo')}>
       <p className="tour-story">{story.title}</p>
       {finished || !stepDef ? (
         <div className="tour-done">
-          <h2>จบเรื่องนี้แล้ว</h2>
-          <p>เลข RTV <span className="mono">{current.rtvId}</span> ผ่านครบทุกบทบาทแล้ว หน้านี้เปลี่ยนเป็นมุมมองผู้ดูภาพรวม (อ่านอย่างเดียว)</p>
-          <p><Link to={`/rtv/${current.rtvId}`}>ดู timeline ของ RTV นี้</Link></p>
-          <p><Link to="/tour" onClick={() => commit(null)}>กลับไปเลือกเรื่อง</Link></p>
+          <h2>{tr('จบเรื่องนี้แล้ว', 'End of this story')}</h2>
+          <p>{tr('เลข RTV', 'RTV number')} <span className="mono">{current.rtvId}</span> {tr('ผ่านครบทุกบทบาทแล้ว หน้านี้เปลี่ยนเป็นมุมมองผู้ดูภาพรวม (อ่านอย่างเดียว)', 'has been through every role. This page is now the Viewer view (read-only).')}</p>
+          <p><Link to={`/rtv/${current.rtvId}`}>{tr('ดู timeline ของ RTV นี้', 'View this RTV’s timeline')}</Link></p>
+          <p><Link to="/tour" onClick={() => commit(null)}>{tr('กลับไปเลือกเรื่อง', 'Back to the story list')}</Link></p>
         </div>
       ) : (
         <>
-          {current.index === 0 && (
+          {current.index === 0 && (current.promoId ? (
             <p className="tour-intro">
-              เริ่มเรื่อง: Brand เปิดคำสั่งแล้ว ระบบออกเลข <span className="mono">{current.rtvId}</span> ให้ใช้ตลอดทาง
+              {tr('เริ่มเรื่อง: ผู้ประสานงานโปรแจ้งงาน', 'Story start: the promo coordinator posted pickup')} <span className="mono">{current.promoId}</span> {tr('แล้ว ทุกแบรนด์ได้เลข RTV', 'and every brand has an RTV number')}
+              {tr('— เรื่องนี้ติดตาม', '— this story follows')} <span className="mono">{current.rtvId}</span> {tr('ของ Lacoste', 'for Lacoste')}
             </p>
-          )}
+          ) : (
+            <p className="tour-intro">
+              {tr('เริ่มเรื่อง: Brand เปิดคำสั่งแล้ว ระบบออกเลข', 'Story start: Brand opened the order and the system issued number')} <span className="mono">{current.rtvId}</span> {tr('ให้ใช้ตลอดทาง', 'to use all the way through')}
+            </p>
+          ))}
           <div className="tour-head">
-            <span className="tour-count">ขั้น {current.index + 1} / {story.steps.length}</span>
+            <span className="tour-count">{tr('ขั้น', 'Step')} {current.index + 1} / {story.steps.length}</span>
             <span className="badge badge-assigned">{ROLE_LABELS[stepDef.role]}</span>
           </div>
           <h2 className="tour-title">{stepDef.title}</h2>
@@ -145,10 +153,10 @@ export default function TourOverlay() {
       )}
       {error && <p className="error" role="alert">{error}</p>}
       <div className="tour-buttons">
-        <button type="button" className="btn" disabled={busy || current.index === 0} onClick={() => { void go(() => back(current)); }}>ย้อนกลับ</button>
-        <button type="button" className="btn btn-primary" disabled={busy || finished} onClick={() => { void go(() => next(current)); }}>ถัดไป</button>
-        <button type="button" className="btn" disabled={busy} onClick={() => { void go(() => startStory(current.storyId)); }}>เริ่มใหม่</button>
-        <button type="button" className="btn" onClick={() => commit(null)}>ออกจาก Demo</button>
+        <button type="button" className="btn" disabled={busy || current.index === 0} onClick={() => { void go(() => back(current)); }}>{tr('ย้อนกลับ', 'Back')}</button>
+        <button type="button" className="btn btn-primary" disabled={busy || finished} onClick={() => { void go(() => next(current)); }}>{tr('ถัดไป', 'Next')}</button>
+        <button type="button" className="btn" disabled={busy} onClick={() => { void go(() => startStory(current.storyId)); }}>{tr('เริ่มใหม่', 'Restart')}</button>
+        <button type="button" className="btn" onClick={() => commit(null)}>{tr('ออกจาก Demo', 'Exit demo')}</button>
       </div>
     </aside>
   );

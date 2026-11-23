@@ -1,6 +1,7 @@
 import { daysBetween } from './format';
 import { HOLDS, holds, isClosed, owner, STEPS } from './rules';
 import type { Hold, Role, Rtv, Step } from './types';
+import { tr } from '../i18n';
 
 export interface Metrics {
   open: number; closed: number; cancelled: number;
@@ -59,9 +60,9 @@ export function computeMetrics(rtvs: Rtv[], now: string): Metrics {
     open: open.length, closed: closed.length, cancelled: cancelled.length,
     byStep, byOwner, byHold,
     segments: [
-      segment('เปิดคำสั่ง → เก็บ', 1, 5),
-      segment('เก็บ → CMG รับ', 5, 8),
-      segment('CMG รับ → CN', 8, 10),
+      segment(tr('เปิดคำสั่ง → เก็บ', 'Opened → collected'), 1, 5),
+      segment(tr('เก็บ → CMG รับ', 'Collected → CMG received'), 5, 8),
+      segment(tr('CMG รับ → CN', 'CMG received → CN'), 8, 10),
     ],
     shortBoxOpen: open.filter(r => r.shortBoxes > 0).length,
   };

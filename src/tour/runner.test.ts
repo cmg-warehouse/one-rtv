@@ -11,7 +11,7 @@ test.each(STORIES.map(s => [s.id, s.steps.length]))('story %s runs to the end', 
   expect(r.step).toBe(id === 'failed-pickup' ? 5 : 10);
 });
 test('step counts match the brief', () => {
-  expect(STORIES.map(s => s.steps.length)).toEqual([7, 9, 9, 8]);
+  expect(STORIES.map(s => s.steps.length)).toEqual([7, 9, 9, 8, 9]);
 });
 test('every step is performed by the role it names', async () => {
   for (const story of STORIES) {

@@ -42,7 +42,7 @@ test('home page offers the guided tour in one click', async () => {
   expect(screen.getByRole('link', { name: 'ดู Flow ภาพรวม' })).toHaveAttribute('href', '/flow');
 });
 
-test('open work by step lists steps 1-9 only; the hold table has four rows and shows a dash for an empty hold', async () => {
+test('open work by step lists steps 1-9 only; the hold table has four rows, a dash for an empty hold and days otherwise', async () => {
   renderAt('/dashboard', 'VIEWER');
   const section = (await screen.findByRole('heading', { name: 'งานเปิดตามสถานะ' })).nextElementSibling as HTMLElement;
   const labels = [...section.querySelectorAll('.bar-label')].map(e => e.textContent);
@@ -53,8 +53,9 @@ test('open work by step lists steps 1-9 only; the hold table has four rows and s
   const rows = within(holdTable).getAllByRole('row').slice(1);
   expect(rows.map(r => within(r).getAllByRole('cell')[0].textContent))
     .toEqual(['รอ Brand ยืนยันยอด', 'รอ RTV Note', 'รอเลข MIM', 'รอยืนยัน Promotion']);
-  const mim = within(rows[2]).getAllByRole('cell');
-  expect(mim[1]).toHaveTextContent('0');
-  expect(mim[2]).toHaveTextContent('—');
-  expect(mim[2]).not.toHaveTextContent('วัน');
+  // An empty hold shows a dash for its age; a hold with work shows days.
+  for (const c of rows.map(r => within(r).getAllByRole('cell'))) {
+    if (c[1].textContent === '0') expect(c[2]).toHaveTextContent('—');
+    else expect(c[2]).toHaveTextContent('วัน');
+  }
 });

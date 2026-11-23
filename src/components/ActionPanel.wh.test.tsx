@@ -76,7 +76,7 @@ test('non-numeric box count shows the Thai error and changes nothing', async () 
 test('on a consign order the reason form closes after a failed pickup is logged, so it cannot be logged twice', async () => {
   const r = await seeded(x => x.channel === 'CONSIGN' && x.step === 4 && !x.cancelled);
   renderAt('/carrier', 'CARRIER');
-  await userEvent.click(await screen.findByRole('button', { name: 'CG Network' }));
+  await userEvent.click(await screen.findByRole('button', { name: 'GIC (CG Network)' }));
   await userEvent.click(await screen.findByRole('link', { name: r.id }));
   await userEvent.click(await screen.findByRole('button', { name: 'เก็บไม่สำเร็จ' }));
   await userEvent.click(screen.getByLabelText('ร้านปิด'));

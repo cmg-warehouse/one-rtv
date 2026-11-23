@@ -8,10 +8,10 @@ test("carrier sees only their carrier's jobs and can switch", async () => {
   renderAt('/carrier', 'CARRIER');
   const cards = await screen.findAllByTestId('job-card');
   cards.forEach(c => expect(c).toHaveTextContent('4W Plaza'));
-  expect(screen.getByRole('button', { name: '4W Plaza' })).toHaveAttribute('aria-pressed', 'true');
-  await userEvent.click(screen.getByRole('button', { name: 'CG Network' }));
+  expect(screen.getByRole('button', { name: 'งานสาย (Route) – 4W Plaza' })).toHaveAttribute('aria-pressed', 'true');
+  await userEvent.click(screen.getByRole('button', { name: 'GIC (CG Network)' }));
   (await screen.findAllByTestId('job-card')).forEach(c => expect(c).toHaveTextContent('CG Network'));
-  expect(screen.getByRole('button', { name: 'CG Network' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: 'GIC (CG Network)' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('the carrier nav entry shows only for the carrier role', async () => {
@@ -24,8 +24,8 @@ test('the carrier nav entry shows only for the carrier role', async () => {
 test('local mall pickups (ขนส่งตามตกลง) appear under their own toggle', async () => {
   await resetData();
   renderAt('/carrier', 'CARRIER');
-  await userEvent.click(await screen.findByRole('button', { name: 'ขนส่งตามตกลง' }));
-  expect(screen.getByRole('button', { name: 'ขนส่งตามตกลง' })).toHaveAttribute('aria-pressed', 'true');
+  await userEvent.click(await screen.findByRole('button', { name: 'งานจองรถ (เก็บตรง)' }));
+  expect(screen.getByRole('button', { name: 'งานจองรถ (เก็บตรง)' })).toHaveAttribute('aria-pressed', 'true');
   const cards = await screen.findAllByTestId('job-card');
-  cards.forEach(c => expect(c).toHaveTextContent('ขนส่งตามตกลง'));
+  cards.forEach(c => expect(c).toHaveTextContent('งานจองรถ (เก็บตรง)'));
 });

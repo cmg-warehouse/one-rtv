@@ -68,8 +68,8 @@ describe('holds clear', () => {
     expect(holds({ ...base, promoConfirmed: true })).toEqual(['WAIT_BRAND_QTY', 'WAIT_RTV_NOTE']);
   });
   test('matching count, SHOP normal has no holds; owner is the next role', () => {
-    const r = rtv({ carrier: 'CG_NETWORK', step: 9, docs: [{ type: 'MIM', value: '26000111' }],
-      boxes: [{ no: 'x-B01', expectedPcs: 10, countedPcs: 10 }] });
+    const r = rtv({ carrier: 'CG_NETWORK', step: 9,
+      boxes: [{ no: 'x-B01', expectedPcs: 10, countedPcs: 10, mim: '26000111' }] });
     expect(holds(r)).toEqual([]);
     expect(owner(r)).toBe('ADMIN_CN');
   });
@@ -131,7 +131,10 @@ describe('WAIT_MIM', () => {
     expect(holds(shopNoMim)).toEqual(['WAIT_MIM']);
     expect(owner(shopNoMim)).toBe('BRAND');
     expect(holds({ ...shopNoMim, channel: 'TEMP_SHOP', saleType: 'PROMO' })).toEqual(['WAIT_MIM', 'WAIT_PROMO']);
-    expect(holds({ ...shopNoMim, docs: [{ type: 'MIM', value: '26000111' }] })).toEqual([]);
+    expect(holds({ ...shopNoMim, boxes: [{ ...counted[0], mim: '26000111' }] })).toEqual([]);
+    // every box needs its own MIM: one box still without it keeps the hold
+    const two = [{ ...counted[0], mim: 'M1' }, { no: 'x-B02', expectedPcs: 3, countedPcs: 3 }];
+    expect(holds({ ...shopNoMim, boxes: two })).toEqual(['WAIT_MIM']);
   });
   test('not before step 9, and never for the mall group (their CN needs RTV Note, not MIM)', () => {
     expect(holds({ ...shopNoMim, step: 8 })).toEqual([]);

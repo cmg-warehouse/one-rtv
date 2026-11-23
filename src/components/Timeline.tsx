@@ -2,25 +2,26 @@ import { fmtDateTime } from '../domain/format';
 import { STEP_LABELS } from '../domain/rules';
 import type { RtvEvent } from '../domain/types';
 import { ROLE_LABELS } from '../state/session';
+import { tr } from '../i18n';
 
 const withNote = (label: string, note?: string) => (note ? `${label}: ${note}` : label);
 
 export function eventText(e: RtvEvent): string {
   switch (e.kind) {
     case 'STEP': {
-      const label = e.step ? STEP_LABELS[e.step] : 'เปลี่ยนสถานะ';
-      const noteSaysAuto = e.note?.startsWith('อัตโนมัติ') ?? false;
-      return [e.auto && !noteSaysAuto ? `${label} (อัตโนมัติ)` : label, e.note].filter(Boolean).join(' — ');
+      const label = e.step ? STEP_LABELS[e.step] : tr('เปลี่ยนสถานะ', 'Status changed');
+      const noteSaysAuto = /^(อัตโนมัติ|auto)/i.test(e.note ?? '');
+      return [e.auto && !noteSaysAuto ? `${label} ${tr('(อัตโนมัติ)', '(automatic)')}` : label, e.note].filter(Boolean).join(' — ');
     }
-    case 'PICKUP_FAILED': return withNote('เก็บไม่สำเร็จ', e.note);
-    case 'SHORT_BOX': return withNote('กล่องขาด', e.note);
-    case 'FLAG_CLEARED': return withNote('ปิดธงกล่องขาด', e.note);
-    case 'QTY_MISMATCH': return 'จำนวนชิ้นไม่ตรงเอกสาร';
-    case 'BRAND_CONFIRMED': return 'Brand ยืนยันตามยอดที่คลังนับ';
-    case 'RECOUNT_REQUESTED': return 'Brand ขอให้นับใหม่';
-    case 'DOC_ADDED': return withNote('เพิ่มเลขเอกสาร', e.note);
-    case 'PROMO_CONFIRMED': return 'ยืนยันยอด Promotion แล้ว';
-    case 'CANCELLED': return withNote('ยกเลิก', e.note);
+    case 'PICKUP_FAILED': return withNote(tr('เก็บไม่สำเร็จ', 'Pickup failed'), e.note);
+    case 'SHORT_BOX': return withNote(tr('กล่องขาด', 'Short boxes'), e.note);
+    case 'FLAG_CLEARED': return withNote(tr('ปิดธงกล่องขาด', 'Short-box flag cleared'), e.note);
+    case 'QTY_MISMATCH': return tr('จำนวนชิ้นไม่ตรงเอกสาร', 'Piece count does not match the documents');
+    case 'BRAND_CONFIRMED': return tr('Brand ยืนยันตามยอดที่คลังนับ', 'Brand confirmed the warehouse count');
+    case 'RECOUNT_REQUESTED': return tr('Brand ขอให้นับใหม่', 'Brand requested a recount');
+    case 'DOC_ADDED': return withNote(tr('เพิ่มเลขเอกสาร', 'Document number added'), e.note);
+    case 'PROMO_CONFIRMED': return tr('ยืนยันยอด Promotion แล้ว', 'Promotion quantity confirmed');
+    case 'CANCELLED': return withNote(tr('ยกเลิก', 'Cancelled'), e.note);
   }
 }
 

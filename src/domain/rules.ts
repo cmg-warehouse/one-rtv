@@ -1,26 +1,38 @@
-import type { Carrier, Channel, CnType, DocType, Hold, Role, Rtv, SaleType, Step } from './types';
+import { bi } from '../i18n';
+import type { Box, Carrier, Channel, CnType, DocType, Hold, Hub, Role, Rtv, SaleType, Step } from './types';
 
 export type StepMode = 'MANUAL' | 'AUTO' | 'SKIPPED';
 export interface StepDef { step: Step; label: string; role: Role; mode: StepMode }
 
-export const STEP_LABELS: Record<Step, string> = {
-  1: 'เปิดคำสั่งแล้ว',
-  2: 'CS รับเรื่อง / จัดขนส่งแล้ว',
-  3: 'ออกใบแจ้งเก็บแล้ว',
-  4: 'ขนส่งรับงานแล้ว',
-  5: 'เก็บสินค้าแล้ว',
-  6: 'SCDC รับเข้าแล้ว',
-  7: 'SCDC ส่งต่อ CMG แล้ว',
-  8: 'CMG รับสินค้าแล้ว',
-  9: 'ตรวจนับเสร็จ',
-  10: 'ออก CN แล้ว (ปิดงาน)',
-};
+export const STEP_LABELS: Record<Step, string> = bi<Step>({
+  1: ['เปิดคำสั่งแล้ว', 'Order opened'],
+  2: ['CS รับเรื่อง / จัดขนส่งแล้ว', 'CS accepted / carrier assigned'],
+  3: ['ออกใบแจ้งเก็บแล้ว', 'Pickup slip issued'],
+  4: ['ขนส่งรับงานแล้ว', 'Carrier accepted job'],
+  5: ['เก็บสินค้าแล้ว', 'Goods collected'],
+  6: ['SCDC รับเข้าแล้ว', 'Received at SCDC'],
+  7: ['SCDC ส่งต่อ CMG แล้ว', 'SCDC forwarded to CMG'],
+  8: ['CMG รับสินค้าแล้ว', 'Received at CMG'],
+  9: ['ตรวจนับเสร็จ', 'Count completed'],
+  10: ['ออก CN แล้ว (ปิดงาน)', 'CN issued (closed)'],
+});
 
 export const STEPS: Step[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 export const HOLDS: Hold[] = ['WAIT_BRAND_QTY', 'WAIT_RTV_NOTE', 'WAIT_MIM', 'WAIT_PROMO'];
 
-/** Documents a Brand may add by hand. */
-export const BRAND_DOC_TYPES: DocType[] = ['MIM', 'SD10', 'RTV_NOTE'];
+/** RTV-level documents a Brand may add by hand. MIM is per box (see setBoxMims), not one number for the RTV. */
+export const BRAND_DOC_TYPES: DocType[] = ['SD10', 'RTV_NOTE'];
+
+/** Boxes still without their own MIM number. */
+export function boxesMissingMim(rtv: Rtv): Box[] {
+  return rtv.boxes.filter(b => !(b.mim ?? '').trim());
+}
+
+/** Is this document held? MIM counts only when every box has its MIM. */
+export function hasDoc(rtv: Rtv, type: DocType): boolean {
+  if (type === 'MIM') return rtv.boxes.length > 0 && boxesMissingMim(rtv).length === 0;
+  return rtv.docs.some(d => d.type === type);
+}
 
 /** Consign and Local mall orders go through the mall's own RTV Note (ห้าง). */
 export function isMallGroup(channel: Channel): boolean {
@@ -34,12 +46,12 @@ export const CHANNEL_LABELS: Record<Channel, string> = {
   LOCAL_MALL: 'Local mall',
 };
 
-export const CARRIER_LABELS: Record<Carrier, string> = {
-  CG_NETWORK: 'CG Network',
-  PLAZA_4W: '4W Plaza',
-  PARCEL: 'Parcel',
-  AGREED: 'ขนส่งตามตกลง',
-};
+export const CARRIER_LABELS: Record<Carrier, string> = bi<Carrier>({
+  CG_NETWORK: ['GIC (CG Network)', 'GIC (CG Network)'],
+  PLAZA_4W: ['งานสาย (Route) – 4W Plaza', 'Route – 4W Plaza'],
+  PARCEL: ['Parcel (ขนส่งนอก)', 'Parcel (outside courier)'],
+  AGREED: ['งานจองรถ (เก็บตรง)', 'Booked truck (direct pickup)'],
+});
 
 export const CN_LABELS: Record<CnType, string> = {
   MIM_SHOP: 'MIM Shop',
@@ -48,28 +60,28 @@ export const CN_LABELS: Record<CnType, string> = {
   ETAX_CREDIT: 'E-tax Credit',
 };
 
-export const HOLD_LABELS: Record<Hold, string> = {
-  WAIT_BRAND_QTY: 'รอ Brand ยืนยันยอด',
-  WAIT_RTV_NOTE: 'รอ RTV Note',
-  WAIT_MIM: 'รอเลข MIM',
-  WAIT_PROMO: 'รอยืนยัน Promotion',
-};
+export const HOLD_LABELS: Record<Hold, string> = bi<Hold>({
+  WAIT_BRAND_QTY: ['รอ Brand ยืนยันยอด', 'Waiting for Brand to confirm qty'],
+  WAIT_RTV_NOTE: ['รอ RTV Note', 'Waiting for RTV Note'],
+  WAIT_MIM: ['รอเลข MIM', 'Waiting for MIM no.'],
+  WAIT_PROMO: ['รอยืนยัน Promotion', 'Waiting for Promotion confirmation'],
+});
 
-export const DOC_LABELS: Record<DocType, string> = {
-  MIM: 'MIM',
-  RTV_NOTE: 'RTV Note (ห้าง)',
-  SD10: 'SD10 / RTV Form',
-  PICKUP_SLIP: 'ใบแจ้งเก็บ',
-  CARRIER_REF: 'เลขพัสดุ / Slip ขนส่ง',
-  TK: 'TK',
-  MATDOC: 'Matdoc',
-  GEN104: 'เลข 104',
-  PROMO_NO: 'เลข Promotion',
-  SALE_RETURN: 'Sale Return',
-  DELIVERY: 'Delivery',
-  INVOICE_REF: 'Invoice อ้างอิง',
-  CN: 'CN',
-};
+export const DOC_LABELS: Record<DocType, string> = bi<DocType>({
+  MIM: ['MIM', 'MIM'],
+  RTV_NOTE: ['RTV Note (ห้าง)', 'RTV Note (mall)'],
+  SD10: ['SD10 / RTV Form', 'SD10 / RTV Form'],
+  PICKUP_SLIP: ['ใบแจ้งเก็บ', 'Pickup slip'],
+  CARRIER_REF: ['เลขพัสดุ / Slip ขนส่ง', 'Tracking no. / carrier slip'],
+  TK: ['TK', 'TK'],
+  MATDOC: ['Matdoc', 'Matdoc'],
+  GEN104: ['เลข 104', 'No. 104'],
+  PROMO_NO: ['เลข Promotion', 'Promotion no.'],
+  SALE_RETURN: ['Sale Return', 'Sale Return'],
+  DELIVERY: ['Delivery', 'Delivery'],
+  INVOICE_REF: ['Invoice อ้างอิง', 'Reference invoice'],
+  CN: ['CN', 'CN'],
+});
 
 export function cnType(channel: Channel, saleType: SaleType): CnType {
   if (isMallGroup(channel)) {
@@ -92,7 +104,8 @@ const BASE_ROLES: Record<Step, Role> = {
 };
 
 
-export function stepsFor(channel: Channel, carrier: Carrier | null): StepDef[] {
+/** `hub` (promotion pickups): the brand's fulfilment decides whether the goods go through SCDC. */
+export function stepsFor(channel: Channel, carrier: Carrier | null, hub?: Hub): StepDef[] {
   return STEPS.map((step): StepDef => {
     let role = BASE_ROLES[step];
     let mode: StepMode = 'MANUAL';
@@ -107,8 +120,13 @@ export function stepsFor(channel: Channel, carrier: Carrier | null): StepDef[] {
     if ((carrier === 'PLAZA_4W' || carrier === 'AGREED') && (step === 6 || step === 7)) {
       mode = 'SKIPPED';
     }
+    if (hub && (step === 6 || step === 7)) mode = hub === 'SCDC' ? 'MANUAL' : 'SKIPPED';
     return { step, label: STEP_LABELS[step], role, mode };
   });
+}
+
+export function stepsOf(rtv: Rtv): StepDef[] {
+  return stepsFor(rtv.channel, rtv.carrier, rtv.hub);
 }
 
 export function isClosed(rtv: Rtv): boolean {
@@ -122,7 +140,7 @@ export function canCancel(rtv: Rtv): boolean {
 
 export function nextStep(rtv: Rtv): StepDef | null {
   if (isClosed(rtv)) return null;
-  return stepsFor(rtv.channel, rtv.carrier).find(s => s.step > rtv.step && s.mode !== 'SKIPPED') ?? null;
+  return stepsOf(rtv).find(s => s.step > rtv.step && s.mode !== 'SKIPPED') ?? null;
 }
 
 export function holds(rtv: Rtv): Hold[] {
@@ -131,8 +149,7 @@ export function holds(rtv: Rtv): Hold[] {
   if (!rtv.qtyConfirmed && rtv.boxes.some(b => b.countedPcs !== b.expectedPcs)) out.push('WAIT_BRAND_QTY');
   if (isMallGroup(rtv.channel)
     && !rtv.docs.some(d => d.type === 'RTV_NOTE')) out.push('WAIT_RTV_NOTE');
-  if (requiredDocs(cnType(rtv.channel, rtv.saleType)).before.includes('MIM')
-    && !rtv.docs.some(d => d.type === 'MIM')) out.push('WAIT_MIM');
+  if (requiredDocs(cnType(rtv.channel, rtv.saleType)).before.includes('MIM') && !hasDoc(rtv, 'MIM')) out.push('WAIT_MIM');
   if (rtv.saleType === 'PROMO' && !rtv.promoConfirmed) out.push('WAIT_PROMO');
   return out;
 }
@@ -160,6 +177,7 @@ export interface Identity { brandId: string; carrier: Carrier }
 export function matchesIdentity(rtv: Rtv, role: Role, identity: Identity): boolean {
   if (role === 'BRAND') return rtv.brandId === identity.brandId;
   if (role === 'CARRIER') return rtv.carrier === identity.carrier;
+  if (role === 'PROMO') return !!rtv.promoId;
   return true;
 }
 

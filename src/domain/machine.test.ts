@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import {
+import { setBoxMims,
   FlowError, addDoc, advance, brandConfirmQty, brandRequestRecount, cancel, clearShortFlag,
   confirmPromo, createRtv, failPickup, rtvId,
 } from './machine';
@@ -105,12 +105,29 @@ test('consign waits for RTV Note (ห้าง) and promo needs confirmation', (
 });
 test('missing CN documents are refused', () =>
   expect(() => advance(toStep(shop(), 9), { step: 10, docs: {} }, as('ADMIN_CN'))).toThrow(FlowError));
-test('addDoc replaces, refuses empty and non-Brand types', () => {
-  const r = addDoc(shop(), { type: 'MIM', value: '999' }, as('BRAND'));
-  expect(r.docs.filter(d => d.type === 'MIM')).toEqual([{ type: 'MIM', value: '999' }]);
-  expect(() => addDoc(shop(), { type: 'MIM', value: ' ' }, as('BRAND'))).toThrow(FlowError);
+test('addDoc replaces, refuses empty and non-Brand types; MIM is per box, not an RTV document', () => {
+  const r = addDoc(shop(), { type: 'SD10', value: '999' }, as('BRAND'));
+  expect(r.docs.filter(d => d.type === 'SD10')).toEqual([{ type: 'SD10', value: '999' }]);
+  expect(() => addDoc(shop(), { type: 'SD10', value: ' ' }, as('BRAND'))).toThrow(FlowError);
   expect(() => addDoc(shop(), { type: 'TK', value: 'x' }, as('BRAND'))).toThrow(FlowError);
-  expect(() => addDoc(shop(), { type: 'MIM', value: '1' }, as('CS'))).toThrow(FlowError);
+  expect(() => addDoc(shop(), { type: 'SD10', value: '1' }, as('CS'))).toThrow(FlowError);
+  expect(() => addDoc(shop(), { type: 'MIM', value: '1' }, as('BRAND'))).toThrow(FlowError);
+});
+test('createRtv keeps one MIM per box; an RTV-level MIM fills boxes that have none', () => {
+  const r = createRtv({ brandId: 'B1', storeId: 'S1', channel: 'SHOP', saleType: 'NORMAL', boxPcs: [5, 6, 7],
+    boxMims: ['M1', ' ', 'M3'], docs: [{ type: 'MIM', value: 'SHARED' }] }, 9, as('BRAND'));
+  expect(r.boxes.map(b => b.mim)).toEqual(['M1', 'SHARED', 'M3']);
+  expect(r.docs.some(d => d.type === 'MIM')).toBe(false);
+});
+test('setBoxMims: Brand only, known boxes only, at least one number', () => {
+  const s = shop();
+  const [b1, b2] = s.boxes.map(b => b.no);
+  const r = setBoxMims(s, { [b1]: ' 111 ', [b2]: '222' }, as('BRAND'));
+  expect(r.boxes.map(b => b.mim)).toEqual(['111', '222']);
+  expect(r.events.at(-1)?.kind).toBe('DOC_ADDED');
+  expect(() => setBoxMims(s, { [b1]: '1' }, as('CS'))).toThrow(FlowError);
+  expect(() => setBoxMims(s, { 'NOPE-B09': '1' }, as('BRAND'))).toThrow(/ไม่พบกล่อง/);
+  expect(() => setBoxMims(s, { [b1]: ' ' }, as('BRAND'))).toThrow(/อย่างน้อย 1 กล่อง/);
 });
 test('failed pickup returns to CS and keeps the slip', () => {
   const r = failPickup(toStep(shop(), 4), 'ร้านปิด', as('CARRIER'));
@@ -180,14 +197,14 @@ describe('WAIT_MIM', () => {
     expect(() => advance(r, { step: 10, docs: { MATDOC: '525' } }, as('ADMIN_CN'))).toThrow(/รอเลข MIM/);
   });
   test('Brand adding the MIM releases it and CN can be issued', () => {
-    const r = addDoc(noMim(), { type: 'MIM', value: '26000777' }, as('BRAND'));
+    const r = setBoxMims(noMim(), { [noMim().boxes[0].no]: '26000777' }, as('BRAND'));
     expect(holds(r)).toEqual([]);
     expect(advance(r, { step: 10, docs: { MATDOC: '525' } }, as('ADMIN_CN')).step).toBe(10);
   });
   test('the missing-before-docs guard still names the document when no hold covers it', () => {
     const r = { ...noMim(), step: 9 as const, docs: [{ type: 'TK' as const, value: 'TK1' }] };
     // WAIT_MIM is a hold, so the hold message wins; the guard covers anything else missing
-    const withMim = addDoc(r, { type: 'MIM', value: '1' }, as('BRAND'));
+    const withMim = setBoxMims(r, { [r.boxes[0].no]: '1' }, as('BRAND'));
     expect(() => advance({ ...withMim, docs: withMim.docs.filter(d => d.type !== 'TK') }, { step: 10, docs: { MATDOC: '1' } }, as('ADMIN_CN')))
       .toThrow(/เอกสารยังไม่ครบ: TK/);
   });

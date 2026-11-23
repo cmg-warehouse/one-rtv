@@ -1,6 +1,7 @@
 import { daysBetween } from '../domain/format';
 import { HOLD_LABELS, holds } from '../domain/rules';
 import type { Rtv } from '../domain/types';
+import { tr } from '../i18n';
 
 export default function HoldBanner({ rtv }: { rtv: Rtv }) {
   const active = holds(rtv);
@@ -12,7 +13,7 @@ export default function HoldBanner({ rtv }: { rtv: Rtv }) {
       {active.map(h => (
         <div key={h} className="hold-row">
           <span className="badge badge-alert">{HOLD_LABELS[h]}</span>
-          <span className="muted"> ผู้ดำเนินการ: Brand / ฝ่ายขาย · รอมาแล้ว {days} วัน</span>
+          <span className="muted"> {tr(`ผู้ดำเนินการ: Brand / ฝ่ายขาย · รอมาแล้ว ${days} วัน`, `Owner: Brand / Sales · waiting ${days} ${days === 1 ? 'day' : 'days'}`)}</span>
         </div>
       ))}
     </div>

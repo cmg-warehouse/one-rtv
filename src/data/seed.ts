@@ -5,6 +5,7 @@ import type { Ctx, StepPayload } from '../domain/machine';
 import { holds, isMallGroup, nextStep, stepsFor } from '../domain/rules';
 import type { Carrier, Channel, DocRef, DocType, Role, Rtv, SaleType, Step } from '../domain/types';
 import { ACTORS, BRANDS, BRAND_ACTORS, STORES } from './masters';
+import { tr } from '../i18n';
 
 const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
@@ -91,8 +92,8 @@ const SPECS: Spec[] = [
   s(3, 'store-10', 10, 8, { sale: 'PROMO', mismatch: true, confirm: true }),
   s(0, 'store-07', 10, 1, { mismatch: true, confirm: true }),
   // cancelled
-  s(0, 'store-03', 1, 6, { cancel: { by: 'BRAND', reason: 'สาขาแจ้งว่าสินค้าถูกนำกลับไปขายต่อ' } }),
-  s(2, 'store-12', 3, 8, { cancel: { by: 'CS', reason: 'Brand แจ้งขอยกเลิก เพราะใบแจ้งข้อมูลไม่ถูกต้อง' } }),
+  s(0, 'store-03', 1, 6, { cancel: { by: 'BRAND', get reason() { return tr('สาขาแจ้งว่าสินค้าถูกนำกลับไปขายต่อ', 'Store says the goods were taken back for resale'); } } }),
+  s(2, 'store-12', 3, 8, { cancel: { by: 'CS', get reason() { return tr('Brand แจ้งขอยกเลิก เพราะใบแจ้งข้อมูลไม่ถูกต้อง', 'Brand asked to cancel because the details on the order were wrong'); } } }),
 ];
 
 // [prefix, base, step] -> prefix + (base + (index + 1) * step); unique per seeded RTV.
@@ -163,12 +164,13 @@ function simulate(spec: Spec, index: number, origin: number, seq: number, scale:
   const boxCount = spec.boxes ?? 1 + Math.floor(rng() * 3);
   const boxPcs = Array.from({ length: boxCount }, () => 6 + Math.floor(rng() * 35));
   const docs: DocRef[] = [];
-  if (!mall) docs.push({ type: 'MIM', value: docNo('MIM', index) });
+  // One MIM per box (Shop / Temp shop); the mall group goes through the RTV Note instead.
+  const boxMims = mall ? undefined : boxPcs.map((_, k) => `${docNo('MIM', index)}${k + 1}`);
   if (spec.sd10) docs.push({ type: 'SD10', value: docNo('SD10', index) });
   if (mall && rtvNote === 'create') docs.push({ type: 'RTV_NOTE', value: docNo('RTV_NOTE', index) });
 
   let r = createRtv(
-    { brandId: BRANDS[spec.brand].id, storeId: spec.store, channel, saleType: spec.sale ?? 'NORMAL', boxPcs, docs },
+    { brandId: BRANDS[spec.brand].id, storeId: spec.store, channel, saleType: spec.sale ?? 'NORMAL', boxPcs, docs, boxMims },
     seq, ctx('BRAND'),
   );
 
@@ -221,13 +223,13 @@ function simulate(spec: Spec, index: number, origin: number, seq: number, scale:
     }
     r = advance(r, payload, c);
     if (def.step === 6 && spec.short?.clear) {
-      lead(); r = clearShortFlag(r, 'ตรวจสอบกับ SCDC แล้ว ได้รับกล่องที่ขาดครบ', ctx('CS'));
+      lead(); r = clearShortFlag(r, tr('ตรวจสอบกับ SCDC แล้ว ได้รับกล่องที่ขาดครบ', 'Checked with SCDC: the missing boxes were received'), ctx('CS'));
     }
     if (spec.failAt === r.step && !failed) {
       failed = true;
       lead();
       const pickupRole = stepsFor(r.channel, r.carrier).find(d => d.step === 4)!.role;
-      r = failPickup(r, 'ผู้รับสินค้าที่สาขาไม่อยู่ ติดต่อไม่ได้', ctx(pickupRole));
+      r = failPickup(r, tr('ผู้รับสินค้าที่สาขาไม่อยู่ ติดต่อไม่ได้', 'No one at the store to hand over the goods, could not be reached'), ctx(pickupRole));
     }
   }
 

@@ -11,6 +11,7 @@ import ScdcForms from './actions/ScdcForms';
 import SecondaryActions from './actions/SecondaryActions';
 import WarehouseCountForm from './actions/WarehouseCountForm';
 import WarehouseReceiveForm from './actions/WarehouseReceiveForm';
+import { tr } from '../i18n';
 
 function PrimaryForm({ rtv, onDone }: { rtv: Rtv; onDone: () => void }) {
   const step = nextStep(rtv)?.step;
@@ -37,12 +38,22 @@ export default function ActionPanel({ rtv, onDone }: { rtv: Rtv; onDone: () => v
   const cnBlocked = canSeeCnForm(rtv, role);
   const brandHolds = mine && role === 'BRAND' && holds(rtv).length > 0;
   const hasSlip = role === 'CS' && rtv.docs.some(d => d.type === 'PICKUP_SLIP');
+  if (rtv.promoId && rtv.step < 5) {
+    return (
+      <div className="card action-card">
+        <h2>{tr('จัดการรวมที่งานเก็บโปร', 'Managed together in the promo pickup')}</h2>
+        <p>{tr(`RTV นี้อยู่ในงานเก็บโปร ${rtv.promoId} · ส่งต่อขนส่ง ยืนยันรถ และบันทึกการเก็บ ทำพร้อมกันทุกแบรนด์ในงาน`, `This RTV is in promo pickup ${rtv.promoId} · handing over to the carrier, confirming the truck and recording the pickup are done together for every brand in the job`)}</p>
+        <Link to={`/promo/${rtv.promoId}`} className="btn btn-primary" data-tour="primary">{tr('ไปที่งานเก็บโปร', 'Go to the promo pickup')}</Link>
+        <SecondaryActions rtv={rtv} role={role} identity={identity} onDone={onDone} />
+      </div>
+    );
+  }
   return (
     <>
       {brandHolds ? <BrandHoldActions rtv={rtv} onDone={onDone} />
         : cnBlocked ? <IssueCnForm rtv={rtv} onDone={onDone} />
         : mine && <PrimaryForm rtv={rtv} onDone={onDone} />}
-      {hasSlip && <p><Link to={`/slip/${rtv.id}`}>พิมพ์ใบแจ้งเก็บ</Link></p>}
+      {hasSlip && <p><Link to={`/slip/${rtv.id}`}>{tr('พิมพ์ใบแจ้งเก็บ', 'Print pickup slip')}</Link></p>}
       <SecondaryActions rtv={rtv} role={role} identity={identity} onDone={onDone} />
     </>
   );

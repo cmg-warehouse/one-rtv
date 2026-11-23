@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { act, type Action } from '../../api';
 import type { Rtv } from '../../domain/types';
 import { useSession } from '../../state/session';
+import { tr } from '../../i18n';
 
 /** Runs one API action for the current role; keeps the Thai error message for the form to show. */
 export function useAct(rtv: Rtv, onDone: () => void) {
@@ -15,7 +16,7 @@ export function useAct(rtv: Rtv, onDone: () => void) {
     try {
       await act(rtv.id, action, { role, actor });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'เกิดข้อผิดพลาด');
+      setError(e instanceof Error ? e.message : tr('เกิดข้อผิดพลาด', 'Something went wrong'));
       setBusy(false);
       return false;
     }

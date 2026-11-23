@@ -1,17 +1,19 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { DEMO_BRAND_ID, ACTORS } from '../data/masters';
+import { bi } from '../i18n';
 import type { Identity } from '../domain/rules';
 import type { Carrier, Role } from '../domain/types';
 
-export const ROLE_LABELS: Record<Role, string> = {
-  BRAND: 'Brand / ฝ่ายขาย',
-  CS: 'CS คลัง',
-  CARRIER: 'ขนส่ง',
-  SCDC: 'SCDC',
-  WH: 'คลัง CMG',
-  ADMIN_CN: 'Admin CN',
-  VIEWER: 'ผู้ดูภาพรวม',
-};
+export const ROLE_LABELS: Record<Role, string> = bi<Role>({
+  BRAND: ['Brand / ฝ่ายขาย', 'Brand / Sales'],
+  PROMO: ['ผู้ประสานงานโปร', 'Promo coordinator'],
+  CS: ['CS คลัง', 'Warehouse CS'],
+  CARRIER: ['ขนส่ง', 'Carrier'],
+  SCDC: ['SCDC', 'SCDC'],
+  WH: ['คลัง CMG', 'CMG warehouse'],
+  ADMIN_CN: ['Admin CN', 'Admin CN'],
+  VIEWER: ['ผู้ดูภาพรวม', 'Viewer'],
+});
 
 export const CARRIER_ACTORS = ['PLAZA_4W', 'CG_NETWORK', 'AGREED'] as const;
 export type CarrierActor = (typeof CARRIER_ACTORS)[number];

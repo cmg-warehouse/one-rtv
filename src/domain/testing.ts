@@ -1,7 +1,8 @@
-import { addDoc, advance, confirmPromo } from './machine';
+import { addDoc, advance, confirmPromo, setBoxMims } from './machine';
 import type { Ctx, NewRtvInput, StepPayload } from './machine';
-import { allowedCarriers, cnType, holds, nextStep, requiredDocs } from './rules';
+import { allowedCarriers, boxesMissingMim, cnType, holds, nextStep, requiredDocs } from './rules';
 import type { DocType, Role, Rtv, Step } from './types';
+import { tr } from '../i18n';
 
 export function rtv(overrides: Partial<Rtv> = {}): Rtv {
   return {
@@ -33,7 +34,7 @@ export const shopInput: NewRtvInput = {
   boxPcs: [10, 6], docs: [{ type: 'MIM', value: '26000100' }],
 };
 
-const ctxFor = (role: Role): Ctx => ({ role, actor: 'ทดสอบ', now: '2026-11-12T03:00:00Z' });
+const ctxFor = (role: Role): Ctx => ({ role, actor: tr('ทดสอบ', 'Test'), now: '2026-11-12T03:00:00Z' });
 
 /** Advance along the happy path until the RTV has completed `step`. */
 export function toStep(start: Rtv, step: Step): Rtv {
@@ -56,7 +57,9 @@ export function toStep(start: Rtv, step: Step): Rtv {
         if (!r.docs.some(d => d.type === 'RTV_NOTE') && requiredDocs(cnType(r.channel, r.saleType)).before.includes('RTV_NOTE')) {
           r = addDoc(r, { type: 'RTV_NOTE', value: 'RN-TEST' }, ctxFor('BRAND'));
         }
-        if (holds(r).includes('WAIT_MIM')) r = addDoc(r, { type: 'MIM', value: 'MIM-TEST' }, ctxFor('BRAND'));
+        if (holds(r).includes('WAIT_MIM')) {
+          r = setBoxMims(r, Object.fromEntries(boxesMissingMim(r).map(b => [b.no, 'MIM-TEST'])), ctxFor('BRAND'));
+        }
         if (r.saleType === 'PROMO' && !r.promoConfirmed) r = confirmPromo(r, ctxFor('BRAND'));
         if (holds(r).length > 0) throw new Error('toStep: RTV is on hold');
         const docs: Partial<Record<DocType, string>> = {};

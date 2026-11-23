@@ -6,7 +6,7 @@ import { renderAt, seeded } from '../testing';
 test('CS assigns parcel only with a tracking number, and no slip step follows', async () => {
   const r = await seeded(x => x.channel === 'SHOP' && x.step === 1 && !x.cancelled);
   renderAt(`/rtv/${r.id}`, 'CS');
-  await userEvent.click(await screen.findByLabelText('Parcel'));
+  await userEvent.click(await screen.findByLabelText('Parcel (ขนส่งนอก)'));
   await userEvent.type(screen.getByLabelText('วันนัดเก็บ'), '2026-11-20');
   await userEvent.click(screen.getByRole('button', { name: 'ยืนยันจัดขนส่ง' }));
   expect(await screen.findByText(/เลขพัสดุ/, { selector: '.error' })).toBeInTheDocument();

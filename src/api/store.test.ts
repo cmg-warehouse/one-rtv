@@ -22,6 +22,6 @@ test('once a write succeeds again, stored data is read as usual', () => {
   saveAll([rtv({ id: 'RTV-A' })]);
   spy.mockRestore();
   saveAll([rtv({ id: 'RTV-C' })]);
-  localStorage.setItem('one-rtv.data.v1', JSON.stringify([rtv({ id: 'RTV-FROM-ANOTHER-TAB' })]));
+  localStorage.setItem('one-rtv.data.v4', JSON.stringify([rtv({ id: 'RTV-FROM-ANOTHER-TAB' })]));
   expect(loadAll().map(r => r.id)).toEqual(['RTV-FROM-ANOTHER-TAB']);
 });

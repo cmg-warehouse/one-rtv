@@ -53,7 +53,7 @@ test('putRtv replaces by id', async () => {
 });
 
 test('corrupt or unavailable storage falls back to seed', async () => {
-  localStorage.setItem('one-rtv.data.v1', '{not json');
+  localStorage.setItem('one-rtv.data.v4', '{not json');
   __clearCache();
   expect((await listRtvs()).length).toBeGreaterThanOrEqual(38);
   __clearCache();

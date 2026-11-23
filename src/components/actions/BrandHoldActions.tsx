@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { DOC_LABELS, HOLD_LABELS, holds } from '../../domain/rules';
+import { boxesMissingMim, DOC_LABELS, HOLD_LABELS, holds } from '../../domain/rules';
 import type { DocType, Hold, Rtv } from '../../domain/types';
 import { ErrorLine, useAct } from './useAct';
+import { tr } from '../../i18n';
 
 function QtySection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; primary: boolean }) {
   const { run, error, busy } = useAct(rtv, onDone);
@@ -10,7 +11,7 @@ function QtySection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; pr
       <h2>{HOLD_LABELS.WAIT_BRAND_QTY}</h2>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>กล่อง</th><th className="num">ตามเอกสาร</th><th className="num">คลังนับได้</th></tr></thead>
+          <thead><tr><th>{tr('กล่อง', 'Box')}</th><th className="num">{tr('ตามเอกสาร', 'Per document')}</th><th className="num">{tr('คลังนับได้', 'Warehouse count')}</th></tr></thead>
           <tbody>
             {rtv.boxes.map(b => (
               <tr key={b.no}>
@@ -25,9 +26,9 @@ function QtySection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; pr
       <ErrorLine message={error} />
       <div className="secondary-row">
         <button type="button" className="btn btn-primary" data-tour={primary ? 'primary' : undefined} disabled={busy}
-          onClick={() => { void run({ type: 'brandConfirmQty' }); }}>ยืนยันตามยอดที่คลังนับ</button>
+          onClick={() => { void run({ type: 'brandConfirmQty' }); }}>{tr('ยืนยันตามยอดที่คลังนับ', 'Confirm warehouse count')}</button>
         <button type="button" className="btn" disabled={busy}
-          onClick={() => { void run({ type: 'brandRequestRecount' }); }}>ขอให้นับใหม่</button>
+          onClick={() => { void run({ type: 'brandRequestRecount' }); }}>{tr('ขอให้นับใหม่', 'Request recount')}</button>
       </div>
     </div>
   );
@@ -47,13 +48,34 @@ function DocSection({ rtv, onDone, primary, hold, doc }: SectionProps & { hold: 
       </label>
       <ErrorLine message={error} />
       <button type="button" className="btn btn-primary" data-tour={primary ? 'primary' : undefined} disabled={busy}
-        onClick={() => { void run({ type: 'addDoc', doc: { type: doc, value } }); }}>บันทึกเลข</button>
+        onClick={() => { void run({ type: 'addDoc', doc: { type: doc, value } }); }}>{tr('บันทึกเลข', 'Save number')}</button>
     </div>
   );
 }
 
 const NoteSection = (p: SectionProps) => <DocSection {...p} hold="WAIT_RTV_NOTE" doc="RTV_NOTE" />;
-const MimSection = (p: SectionProps) => <DocSection {...p} hold="WAIT_MIM" doc="MIM" />;
+/** WAIT_MIM: one input per box that still has no MIM. */
+function MimSection({ rtv, onDone, primary }: SectionProps) {
+  const missing = boxesMissingMim(rtv);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const { run, error, busy } = useAct(rtv, onDone);
+  return (
+    <div className="card">
+      <h2>{HOLD_LABELS.WAIT_MIM}</h2>
+      <p className="muted">{tr(`ยังไม่มี MIM ${missing.length} จาก ${rtv.boxes.length} กล่อง`, `${missing.length} of ${rtv.boxes.length} boxes still have no MIM`)}</p>
+      <div className="form-grid">
+        {missing.map(b => (
+          <label key={b.no} className="field">{tr(`MIM กล่อง ${b.no.slice(-3)}`, `MIM for box ${b.no.slice(-3)}`)}
+            <input value={values[b.no] ?? ''} onChange={e => setValues(v => ({ ...v, [b.no]: e.target.value }))} />
+          </label>
+        ))}
+      </div>
+      <ErrorLine message={error} />
+      <button type="button" className="btn btn-primary" data-tour={primary ? 'primary' : undefined} disabled={busy}
+        onClick={() => { void run({ type: 'setBoxMims', mims: values }); }}>{tr('บันทึกเลข MIM', 'Save MIM numbers')}</button>
+    </div>
+  );
+}
 
 function PromoSection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; primary: boolean }) {
   const { run, error, busy } = useAct(rtv, onDone);
@@ -62,7 +84,7 @@ function PromoSection({ rtv, onDone, primary }: { rtv: Rtv; onDone: () => void; 
       <h2>{HOLD_LABELS.WAIT_PROMO}</h2>
       <ErrorLine message={error} />
       <button type="button" className="btn btn-primary" data-tour={primary ? 'primary' : undefined} disabled={busy}
-        onClick={() => { void run({ type: 'confirmPromo' }); }}>ยืนยันยอด Promotion</button>
+        onClick={() => { void run({ type: 'confirmPromo' }); }}>{tr('ยืนยันยอด Promotion', 'Confirm Promotion quantity')}</button>
     </div>
   );
 }
