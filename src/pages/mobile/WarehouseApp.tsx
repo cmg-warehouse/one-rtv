@@ -58,16 +58,26 @@ function Home({ inbound, toCount, go }: { inbound: Rtv[]; toCount: Rtv[]; go(s: 
   );
 }
 
-function Find({ pool, all, go }: { pool: Rtv[]; all: Rtv[]; go(s: Screen): void }) {
+function Find({ pool, all, go, firstId }: { pool: Rtv[]; all: Rtv[]; go(s: Screen): void; firstId?: string }) {
   const { toast, show } = useToast();
-  const target = pool.find(r => nextStep(r)?.step === 8)?.boxes[0].no ?? pool[0]?.boxes[0].no ?? null;
+  // The demo's shared first example stays in view until the warehouse has counted it (before it arrives, a scan says where it is).
+  const first = all.find(r => r.id === firstId && (nextStep(r)?.step ?? 99) <= 9);
+  // Not collected yet: guide the viewer to the carrier phone instead of a red "not here" on the perfect case.
+  const waiting = first && (nextStep(first)?.step ?? 0) < 8;
+  const target = first?.boxes[0].no ?? pool.find(r => nextStep(r)?.step === 8)?.boxes[0].no ?? pool[0]?.boxes[0].no ?? null;
   return (
     <>
       <AppBar title={tr('สแกนรับสินค้า', 'Scan to receive')} dark onBack={() => go({ name: 'home' })} />
       <div className="ma-body ma-dark">
+        {waiting && (
+          <p className="ma-guide" role="note">
+            {tr(`รถกำลังไปเก็บ ${first.id.slice(-5)} ที่${shortStore(first.storeId)} — กดเก็บที่แอปขนส่งทางซ้ายก่อน แล้วกล่องนี้จะสแกนรับเข้าได้`, `The truck is on its way to collect ${first.id.slice(-5)} at ${shortStore(first.storeId)}. Collect it on the carrier app on the left first, then this box can be scanned in`)}
+          </p>
+        )}
         <ScanCamera kind="barcode" target={target} hint={tr('แตะเพื่อสแกนป้ายกล่อง', 'Tap to scan a box label')} manualHint={tr('เลขกล่อง หรือเลข RTV', 'Box number or RTV number')}
           onScan={(v) => {
             const same = (r: Rtv) => r.id.toUpperCase() === v.toUpperCase() || matchBox(r, v);
+            if (waiting && same(first)) return;
             const hit = pool.find(same);
             if (!hit) {
               // Known RTV that has not reached the warehouse yet: say where it is instead of "not found".
@@ -180,7 +190,7 @@ function Done({ id, mismatch, go }: { id: string; mismatch: boolean; go(s: Scree
 }
 
 /** CMG warehouse receiving app (steps 8–9) inside an iPhone mock. */
-export default function WarehouseApp() {
+export default function WarehouseApp({ firstId }: { firstId?: string } = {}) {
   const { rtvs } = useRtvList();
   const { identity } = useSession();
   const [screen, setScreen] = useState<Screen>({ name: 'home' });
@@ -194,7 +204,7 @@ export default function WarehouseApp() {
   if ('id' in screen && !rtv) body = <p className="ma-empty">{tr('กำลังโหลด…', 'Loading…')}</p>;
   else switch (screen.name) {
     case 'home': body = <Home inbound={inbound} toCount={toCount} go={setScreen} />; break;
-    case 'find': body = <Find pool={[...inbound, ...toCount]} all={rtvs} go={setScreen} />; break;
+    case 'find': body = <Find pool={[...inbound, ...toCount]} all={rtvs} go={setScreen} firstId={firstId} />; break;
     case 'receive': body = <Receive key={screen.id} rtv={rtv!} go={setScreen} />; break;
     case 'count': body = <Count key={screen.id} rtv={rtv!} received={screen.received} go={setScreen} />; break;
     case 'done': body = <Done id={screen.id} mismatch={screen.mismatch} go={setScreen} />; break;

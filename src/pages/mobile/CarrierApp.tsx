@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { act } from '../../api';
 import IPhone, { AppBar } from '../../components/mobile/IPhone';
@@ -31,7 +31,7 @@ function actorOf(rtv: Rtv, driver: Driver | null) {
 
 /** Pickups the phone can open: the carrier owns the next step (4 accept or 5 collect). Parcel steps belong to CS. */
 // Promotion pickups are collected for the whole event on the งานเก็บโปร page, not RTV by RTV.
-const isPickup = (r: Rtv) => !r.promoId && owner(r) === 'CARRIER' && [4, 5].includes(nextStep(r)?.step ?? 0);
+export const isPickup = (r: Rtv) => !r.promoId && owner(r) === 'CARRIER' && [4, 5].includes(nextStep(r)?.step ?? 0);
 
 /** Why a scanned RTV cannot be opened on the carrier phone. */
 function whyNot(r: Rtv): string {
@@ -102,21 +102,24 @@ function Home({ recent, all, driver, go }: { recent: string[]; all: Rtv[]; drive
   );
 }
 
-interface SlipTarget { value: string; caption: string }
+interface SlipTarget { value: string; caption: ReactNode }
 
-function SlipScan({ all, events, onFound, go, focus, focusPromo }: {
-  all: Rtv[]; events: PromoEvent[]; onFound(id: string): void; go(s: Screen): void; focus?: string; focusPromo?: string;
+function SlipScan({ all, events, onFound, go, focus, focusPromo, firstId }: {
+  all: Rtv[]; events: PromoEvent[]; onFound(id: string): void; go(s: Screen): void; focus?: string; focusPromo?: string; firstId?: string;
 }) {
   const { toast, show } = useToast();
   // Demo only: what the simulated camera is pointed at. A real phone reads whatever slip is in front of it.
   const rtvSlip = (r: Rtv): SlipTarget => ({
     value: r.id,
-    caption: `${slipNo(r) ? tr(`ใบแจ้งเก็บ ${slipNo(r)}`, `Pickup slip ${slipNo(r)}`) : tr('เอกสาร RTV (ไม่มีใบแจ้งเก็บ)', 'RTV document (no pickup slip)')} · ${shortStore(r.storeId)}`,
+    // RTV number first, so it matches the box label the warehouse scans; the slip number is its own line.
+    caption: <>{r.id}<span className="scan-label-sub">{slipNo(r) ? tr(`ใบแจ้งเก็บ ${slipNo(r)}`, `Pickup slip ${slipNo(r)}`) : tr('เอกสาร RTV (ไม่มีใบแจ้งเก็บ)', 'RTV document (no pickup slip)')} · {shortStore(r.storeId)}</span></>,
   });
   const promoSlip = (e: PromoEvent): SlipTarget => ({ value: slipOf(e), caption: `${tr('ใบแจ้งเก็บรวม', 'Combined pickup slip')} ${slipOf(e)} · ${e.name}` });
+  const first = all.find(r => r.id === firstId && isPickup(r));
   const slips: SlipTarget[] = [
+    ...(first ? [rtvSlip(first)] : []),
     ...events.filter(e => promoReady(e) && e.status !== 'PICKED').map(promoSlip),
-    ...all.filter(isPickup).map(rtvSlip),
+    ...all.filter(r => isPickup(r) && r !== first).map(rtvSlip),
   ];
   const [pick, setPick] = useState(0);
   const focused = focusPromo ? events.find(e => e.id === focusPromo) : undefined;
@@ -315,7 +318,7 @@ function Done({ id, got, total, go }: { id: string; got: number; total: number; 
  * Carrier pickup app (steps 4–5) inside an iPhone mock. Boxes are confirmed by count + photo + signature, not scanned one by one. Scan-first: drivers (including carriers outside the
  * group, with no account) open an order by scanning the QR on the pickup slip; nothing is listed in advance.
  */
-export default function CarrierApp({ focusId, focusPromo, label }: { focusId?: string; focusPromo?: string; label?: string } = {}) {
+export default function CarrierApp({ focusId, focusPromo, label, firstId }: { focusId?: string; focusPromo?: string; label?: string; firstId?: string } = {}) {
   const { rtvs } = useRtvList();
   const { events } = usePromoList();
   // focusId: opened by "scanning" a printed slip elsewhere in the demo — start on the camera, pointed at that slip.
@@ -333,7 +336,7 @@ export default function CarrierApp({ focusId, focusPromo, label }: { focusId?: s
   } else if ('id' in screen && !rtv && screen.name !== 'done') body = <p className="ma-empty">{tr('กำลังโหลด…', 'Loading…')}</p>;
   else switch (screen.name) {
     case 'home': body = <Home recent={recent} all={rtvs} driver={driver} go={setScreen} />; break;
-    case 'slip': body = <SlipScan all={rtvs} events={events} onFound={remember} go={setScreen} focus={focusId} focusPromo={focusPromo} />; break;
+    case 'slip': body = <SlipScan all={rtvs} events={events} onFound={remember} go={setScreen} focus={focusId} focusPromo={focusPromo} firstId={firstId} />; break;
     case 'job': body = <Job key={screen.id} rtv={rtv!} driver={driver} setDriver={setDriver} go={setScreen} />; break;
     case 'collect': body = <Collect key={screen.id} rtv={rtv!} driver={driver} go={setScreen} />; break;
     case 'fail': body = <Fail rtv={rtv!} driver={driver} go={setScreen} />; break;

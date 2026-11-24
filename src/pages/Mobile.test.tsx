@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getRtv, resetData } from '../api';
 import { nextStep } from '../domain/rules';
@@ -147,4 +147,34 @@ test('warehouse scans boxes in, then counts: the RTV reaches step 9', async () =
   const after = await getRtv(rtv.id);
   expect(after?.step).toBe(9);
   expect(after?.docs.some(d => d.type === 'TK')).toBe(true);
+});
+
+test('both phones start on the same perfect-case RTV: collect it on the left, then it scans in on the right', async () => {
+  await resetData();
+  renderAt('/mobile');
+  const carrier = await screen.findByRole('region', { name: /แอปขนส่ง/ });
+  const wh = screen.getByRole('region', { name: /แอปคลัง/ });
+  await userEvent.click(within(carrier).getByRole('button', { name: /สแกน QR ใบแจ้งเก็บ/ }));
+  const slip = await within(carrier).findByRole('button', { name: /^แตะเพื่อสแกน RTV-/ });
+  const id = slip.getAttribute('aria-label')!.replace('แตะเพื่อสแกน ', '');
+  const rtv = (await getRtv(id))!;
+  // The perfect case: accepted already, the truck only has to collect, and it goes straight to CMG.
+  expect(nextStep(rtv)?.step).toBe(5);
+
+  // Before collection the warehouse guides the viewer to the left phone instead of a red error.
+  await userEvent.click(within(wh).getByRole('button', { name: /สแกนรับสินค้า/ }));
+  const label = within(wh).getByRole('button', { name: `แตะเพื่อสแกน ${id}-B01` });
+  expect(within(wh).getByRole('note')).toHaveTextContent('แอปขนส่งทางซ้าย');
+
+  await userEvent.click(slip);
+  await userEvent.click(await within(carrier).findByRole('button', { name: 'เก็บสินค้า: นับกล่อง + ถ่ายรูป' }));
+  await userEvent.click(within(carrier).getByRole('button', { name: /ถ่ายรูปกล่อง/ }));
+  await userEvent.type(within(carrier).getByLabelText('ชื่อผู้ส่งมอบ'), 'คุณสาขา');
+  sign(carrier);
+  await userEvent.click(within(carrier).getByRole('button', { name: 'ยืนยันเก็บสินค้า' }));
+  expect(await within(carrier).findByText('เก็บสินค้าแล้ว')).toBeInTheDocument();
+
+  await waitFor(() => expect(within(wh).queryByRole('note')).toBeNull());
+  await userEvent.click(label);
+  expect(await within(wh).findByText('รับเข้าคลัง', {}, { timeout: 3000 })).toBeInTheDocument();
 });
